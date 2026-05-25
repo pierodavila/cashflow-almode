@@ -67,6 +67,13 @@
   <div class="logo">Cash<span>Flow</span></div>
   <div class="logo-sub">Ponto de Venda · Almode API</div>
 
+  <div class="lbl">Valor da Compra (R$)</div>
+  <input type="number" id="valorCompra" placeholder="0,00" step="0.01" min="0"
+    style="width:100%;padding:11px 13px;background:var(--s2);border:1px solid var(--bd);border-radius:10px;color:var(--tx);font-size:16px;font-family:var(--mo);outline:none;margin-bottom:12px;transition:border-color .15s"
+    oninput="calcLimite()">
+  <div id="limiteInfo" style="font-size:11px;color:var(--mt);font-family:var(--mo);margin-bottom:14px;display:none">
+    Limite de uso: <span id="limiteVal" style="color:var(--ac)">R$ 0,00</span>
+  </div>
   <div class="lbl">CPF do Cliente</div>
   <div class="row">
     <input class="cpf" id="cpf" type="text" placeholder="000.000.000-00" maxlength="14"
@@ -80,7 +87,7 @@
     <div class="res-card">
       <div class="res-name" id="rNome"></div>
       <div class="res-cpf" id="rCpf"></div>
-      <div class="res-lbl">Cashback Disponível</div>
+      <div class="res-lbl">Cashback Disponível (máx. 50% da compra)</div>
       <div class="res-val" id="rVal"></div>
       <div class="res-btns">
         <button class="res-ok" onclick="novo()">✓ Confirmado</button>
@@ -166,7 +173,18 @@ async function buscar() {
   }
 }
 
+function calcLimite() {
+  const v = parseFloat(document.getElementById('valorCompra').value) || 0
+  const limite = v * 0.5
+  document.getElementById('limiteInfo').style.display = v > 0 ? 'block' : 'none'
+  document.getElementById('limiteVal').textContent = 'R$ ' + limite.toFixed(2).replace('.',',')
+}
+
 function mostrar(nome, cpf, valor) {
+  const valorCompra = parseFloat(document.getElementById('valorCompra').value) || 0
+  const limite50 = valorCompra * 0.5
+  // Aplica limite de 50% se valor da compra foi informado
+  if (valorCompra > 0 && valor > limite50) valor = limite50
   document.getElementById('rNome').textContent = nome
   document.getElementById('rCpf').textContent = fmtCpf(cpf)
   document.getElementById('rVal').textContent = 'R$ ' + valor.toFixed(2).replace('.',',')
