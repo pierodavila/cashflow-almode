@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>CashFlow — Campanhas</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080810;--s:#10101a;--s2:#18182a;--bd:#252538;--ac:#00e5a0;--ac2:rgba(0,229,160,.1);--ac3:rgba(0,229,160,.2);--wa:#25d366;--wa2:rgba(37,211,102,.1);--sms:#378add;--sms2:rgba(55,138,221,.1);--tx:#e6e6f0;--mt:#666688;--fn:'IBM Plex Sans',sans-serif;--mo:'IBM Plex Mono',monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:var(--fn);min-height:100vh}
+body::before{content:'';position:fixed;top:-20vh;left:-10vw;width:60vw;height:60vh;background:radial-gradient(ellipse,rgba(0,229,160,.04) 0%,transparent 70%);pointer-events:none}
+
+header{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:1px solid var(--bd);background:rgba(8,8,16,.9);backdrop-filter:blur(10px);position:sticky;top:0;z-index:100}
+.logo{font-size:18px;font-weight:600;letter-spacing:-.04em}.logo span{color:var(--ac)}
+.logo-sub{font-size:10px;color:var(--mt);font-family:var(--mo)}
+.hdr-right{display:flex;gap:10px;align-items:center}
+.badge{font-family:var(--mo);font-size:11px;padding:4px 12px;border-radius:20px;border:1px solid var(--bd);color:var(--mt);display:flex;align-items:center;gap:5px}
+.badge.on{border-color:rgba(0,229,160,.3);color:var(--ac)}
+.badge.on::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--ac);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.btn{padding:9px 16px;border-radius:9px;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;font-family:var(--fn);display:inline-flex;align-items:center;gap:7px;border:1px solid transparent;text-decoration:none}
+.btn-primary{background:var(--ac);color:#080810}.btn-primary:hover{filter:brightness(1.1)}.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-ghost{background:var(--s2);color:var(--tx);border-color:var(--bd)}.btn-ghost:hover{border-color:var(--ac);color:var(--ac)}
+.btn-sm{padding:6px 12px;font-size:11px;border-radius:7px}
+.btn-wa{background:var(--wa2);color:var(--wa);border:1px solid rgba(37,211,102,.3)}.btn-wa:hover{background:rgba(37,211,102,.2)}
+.btn-sms{background:var(--sms2);color:var(--sms);border:1px solid rgba(55,138,221,.3)}.btn-sms:hover{background:rgba(55,138,221,.2)}
+.btn-danger{background:rgba(226,75,74,.1);color:#e24b4a;border:1px solid rgba(226,75,74,.25)}
+
+main{padding:28px 32px;max-width:1300px;margin:0 auto}
+.tabs{display:flex;gap:4px;margin-bottom:24px;border-bottom:1px solid var(--bd);padding-bottom:0}
+.tab{padding:10px 18px;font-size:13px;cursor:pointer;color:var(--mt);border-bottom:2px solid transparent;transition:all .15s;margin-bottom:-1px}
+.tab.active{color:var(--ac);border-color:var(--ac)}
+.tab-content{display:none}.tab-content.active{display:block;animation:fadeUp .25s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* CONFIG ZENVIA */
+.config-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+.config-card{background:var(--s);border:1px solid var(--bd);border-radius:12px;padding:20px}
+.config-card h3{font-size:13px;font-weight:500;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.cf-group{margin-bottom:10px}
+.cf-group label{font-family:var(--mo);font-size:10px;color:var(--mt);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em}
+.cf-group input,.cf-group select,.cf-group textarea{width:100%;padding:9px 11px;background:var(--s2);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-size:12px;font-family:var(--mo);outline:none;transition:border-color .15s}
+.cf-group input:focus,.cf-group select:focus,.cf-group textarea:focus{border-color:var(--ac)}
+.cf-group textarea{resize:vertical;min-height:70px;font-family:var(--fn);line-height:1.5}
+.cf-group select option{background:var(--s2)}
+
+/* CANAIS */
+.canais-row{display:flex;gap:10px;margin-bottom:16px}
+.canal-toggle{flex:1;padding:12px;border-radius:10px;border:1px solid var(--bd);background:var(--s2);cursor:pointer;transition:all .15s;text-align:center}
+.canal-toggle.wa.ativo{border-color:rgba(37,211,102,.4);background:var(--wa2)}
+.canal-toggle.sms.ativo{border-color:rgba(55,138,221,.4);background:var(--sms2)}
+.canal-toggle .icon{font-size:20px;margin-bottom:4px}
+.canal-toggle .lbl{font-size:12px;font-weight:500}
+.canal-toggle .sub{font-size:10px;color:var(--mt);font-family:var(--mo);margin-top:2px}
+
+/* NUMEROS POR LOJA */
+.lojas-config{background:var(--s);border:1px solid var(--bd);border-radius:12px;overflow:hidden;margin-bottom:20px}
+.lojas-config-header{padding:14px 18px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
+.lojas-config-header h3{font-size:13px;font-weight:500}
+.loja-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:12px 18px;border-bottom:1px solid rgba(37,37,56,.4);align-items:center}
+.loja-row:last-child{border:none}
+.loja-nome{font-size:13px;font-weight:500}
+.loja-input{padding:7px 10px;background:var(--s2);border:1px solid var(--bd);border-radius:7px;color:var(--tx);font-size:12px;font-family:var(--mo);outline:none;width:100%}
+.loja-input:focus{border-color:var(--ac)}
+.badge-loja{font-size:10px;padding:2px 8px;border-radius:10px;font-family:var(--mo)}
+.badge-padrao{background:var(--ac2);color:var(--ac);border:1px solid var(--ac3)}
+
+/* NOVA CAMPANHA */
+.campanha-form{background:var(--s);border:1px solid var(--bd);border-radius:12px;padding:22px;margin-bottom:20px}
+.campanha-form h3{font-size:14px;font-weight:500;margin-bottom:18px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-full{grid-column:1/-1}
+.var-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.var-chip{font-size:11px;font-family:var(--mo);padding:3px 9px;background:var(--s2);border:1px solid var(--bd);border-radius:6px;cursor:pointer;color:var(--ac);transition:all .15s}
+.var-chip:hover{background:var(--ac2);border-color:var(--ac3)}
+.preview-box{background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-top:10px;font-size:13px;line-height:1.6;color:var(--tx)}
+.preview-label{font-size:10px;font-family:var(--mo);color:var(--mt);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.char-count{font-size:10px;font-family:var(--mo);color:var(--mt);text-align:right;margin-top:4px}
+.char-warn{color:#ffb340}
+
+/* SEGMENTOS SELECT */
+.seg-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.seg-chip{padding:6px 12px;border-radius:20px;border:1px solid var(--bd);font-size:12px;cursor:pointer;transition:all .15s;color:var(--mt);background:var(--s2)}
+.seg-chip.sel{color:var(--tx);border-color:var(--ac)}
+.seg-chip .count{font-size:10px;font-family:var(--mo);margin-left:4px;opacity:.7}
+
+/* LISTA CAMPANHAS */
+.camp-list{display:flex;flex-direction:column;gap:10px}
+.camp-card{background:var(--s);border:1px solid var(--bd);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:16px}
+.camp-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.camp-icon.wa{background:var(--wa2);border:1px solid rgba(37,211,102,.2)}
+.camp-icon.sms{background:var(--sms2);border:1px solid rgba(55,138,221,.2)}
+.camp-icon.both{background:var(--ac2);border:1px solid var(--ac3)}
+.camp-info{flex:1}
+.camp-nome{font-size:14px;font-weight:500;margin-bottom:2px}
+.camp-meta{font-size:11px;color:var(--mt);font-family:var(--mo)}
+.camp-stats{display:flex;gap:16px;text-align:center}
+.camp-stat-val{font-size:16px;font-weight:600}
+.camp-stat-val.green{color:var(--ac)}
+.camp-stat-lbl{font-size:10px;color:var(--mt);font-family:var(--mo);text-transform:uppercase}
+.camp-actions{display:flex;gap:8px}
+.status-pill{font-size:10px;font-family:var(--mo);padding:3px 9px;border-radius:10px}
+.status-agendada{background:rgba(239,159,39,.1);color:#ef9f27;border:1px solid rgba(239,159,39,.2)}
+.status-enviada{background:var(--ac2);color:var(--ac);border:1px solid var(--ac3)}
+.status-rascunho{background:var(--s2);color:var(--mt);border:1px solid var(--bd)}
+
+/* GATILHOS */
+.gatilho-card{background:var(--s);border:1px solid var(--bd);border-radius:12px;padding:18px;margin-bottom:10px}
+.gatilho-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.gatilho-header h4{font-size:13px;font-weight:500}
+.toggle-wrap{display:flex;align-items:center;gap:8px}
+.toggle{width:36px;height:20px;border-radius:10px;background:var(--bd);cursor:pointer;position:relative;transition:background .2s}
+.toggle.on{background:var(--ac)}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s}
+.toggle.on::after{transform:translateX(16px)}
+.toggle-lbl{font-size:12px;color:var(--mt)}
+.gatilho-body{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+
+/* PROGRESS */
+.progress-wrap{height:4px;background:var(--bd);border-radius:2px;margin:10px 0;overflow:hidden;display:none}
+.progress-wrap.show{display:block}
+.progress-bar{height:100%;background:var(--ac);border-radius:2px;transition:width .3s;width:0%}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--s);border:1px solid var(--bd);border-radius:10px;padding:12px 18px;font-size:13px;z-index:9999;transform:translateY(80px);opacity:0;transition:all .25s cubic-bezier(.34,1.56,.64,1);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.toast.show{transform:none;opacity:1}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">Cash<span>Flow</span> <span style="font-size:13px;color:var(--mt);font-weight:400">— Campanhas</span></div>
+    <div class="logo-sub">SMS + WhatsApp via Zenvia</div>
+  </div>
+  <div class="hdr-right">
+    <div class="badge" id="zenviaStatus">Zenvia: configurar</div>
+    <a href="rfm.html" class="btn btn-ghost btn-sm">← RFM</a>
+    <a href="index.html" class="btn btn-ghost btn-sm">🏠 Principal</a>
+  </div>
+</header>
+
+<main>
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('nova')">Nova Campanha</div>
+    <div class="tab" onclick="showTab('historico')">Histórico</div>
+    <div class="tab" onclick="showTab('gatilhos')">Gatilhos Automáticos</div>
+    <div class="tab" onclick="showTab('config')">Configuração Zenvia</div>
+  </div>
+
+  <!-- NOVA CAMPANHA -->
+  <div class="tab-content active" id="tab-nova">
+    <div class="campanha-form">
+      <h3>Criar nova campanha</h3>
+
+      <!-- CANAIS -->
+      <div class="cf-group">
+        <label>Canal de envio</label>
+        <div class="canais-row">
+          <div class="canal-toggle wa" id="toggleWA" onclick="toggleCanal('wa')">
+            <div class="icon">💬</div>
+            <div class="lbl">WhatsApp</div>
+            <div class="sub">~R$ 0,30/msg</div>
+          </div>
+          <div class="canal-toggle sms ativo" id="toggleSMS" onclick="toggleCanal('sms')">
+            <div class="icon">📱</div>
+            <div class="lbl">SMS</div>
+            <div class="sub">~R$ 0,09/msg</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="cf-group">
+          <label>Nome da campanha</label>
+          <input type="text" id="campNome" placeholder="Ex: Reativação Maio 2026">
+        </div>
+        <div class="cf-group">
+          <label>Agendamento</label>
+          <input type="datetime-local" id="campData">
+        </div>
+
+        <!-- SEGMENTOS -->
+        <div class="cf-group form-full">
+          <label>Segmentos RFM de destino</label>
+          <div class="seg-chips" id="segChips"></div>
+        </div>
+
+        <!-- LOJA REMETENTE -->
+        <div class="cf-group">
+          <label>Remetente</label>
+          <select id="campLoja">
+            <option value="padrao">Número padrão (todas as lojas)</option>
+            <option value="FORUM OUTLET">FORUM OUTLET</option>
+            <option value="COLCCI OUTLET OPRJ">COLCCI OUTLET OPRJ</option>
+            <option value="TRITON OUTLET">TRITON OUTLET</option>
+          </select>
+        </div>
+
+        <div class="cf-group">
+          <label>Estimativa de envios</label>
+          <div style="padding:9px 11px;background:var(--s2);border:1px solid var(--bd);border-radius:8px;font-size:12px;font-family:var(--mo);color:var(--ac)" id="estimativa">Selecione segmentos acima</div>
+        </div>
+
+        <!-- MENSAGEM -->
+        <div class="cf-group form-full">
+          <label>Mensagem <span style="color:var(--mt);font-size:10px">(use as variáveis abaixo)</span></label>
+          <textarea id="campMsg" rows="4" placeholder="Ex: Olá {nome}! Você tem R$ {cashback} de cashback disponível na {loja}. Venha usar! 🎉" oninput="atualizarPreview()"></textarea>
+          <div class="var-chips">
+            <span class="var-chip" onclick="inserirVar('{nome}')">+{nome}</span>
+            <span class="var-chip" onclick="inserirVar('{cashback}')">+{cashback}</span>
+            <span class="var-chip" onclick="inserirVar('{loja}')">+{loja}</span>
+            <span class="var-chip" onclick="inserirVar('{cpf}')">+{cpf}</span>
+            <span class="var-chip" onclick="inserirVar('{qtd_compras}')">+{qtd_compras}</span>
+          </div>
+          <div class="char-count" id="charCount">0 / 160 chars (SMS)</div>
+        </div>
+
+        <!-- PREVIEW -->
+        <div class="cf-group form-full">
+          <div class="preview-label">Preview personalizado</div>
+          <div class="preview-box" id="preview">Escreva a mensagem acima para ver o preview...</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <button class="btn btn-ghost" onclick="salvarRascunho()">💾 Salvar rascunho</button>
+        <button class="btn btn-ghost" onclick="testarEnvio()">🧪 Enviar teste para mim</button>
+        <button class="btn btn-primary" style="margin-left:auto" onclick="criarCampanha()">🚀 Criar Campanha</button>
+      </div>
+
+      <div class="progress-wrap" id="campProgress">
+        <div class="progress-bar" id="campProgressBar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTÓRICO -->
+  <div class="tab-content" id="tab-historico">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-size:14px;font-weight:500">Campanhas enviadas</div>
+    </div>
+    <div class="camp-list" id="campList">
+      <div style="text-align:center;padding:60px;color:var(--mt);font-size:13px">Nenhuma campanha enviada ainda</div>
+    </div>
+  </div>
+
+  <!-- GATILHOS -->
+  <div class="tab-content" id="tab-gatilhos">
+    <div style="margin-bottom:16px">
+      <div style="font-size:14px;font-weight:500;margin-bottom:4px">Gatilhos automáticos</div>
+      <div style="font-size:12px;color:var(--mt)">O sistema verifica diariamente e dispara quando a condição for atingida</div>
+    </div>
+
+    <div class="gatilho-card">
+      <div class="gatilho-header">
+        <h4>😴 Cliente sem comprar há X dias</h4>
+        <div class="toggle-wrap">
+          <div class="toggle" id="g1toggle" onclick="toggleGatilho('g1')"></div>
+          <span class="toggle-lbl" id="g1lbl">Desativado</span>
+        </div>
+      </div>
+      <div class="gatilho-body">
+        <div class="cf-group">
+          <label>Dias sem comprar</label>
+          <input type="number" id="g1dias" value="30" min="1">
+        </div>
+        <div class="cf-group">
+          <label>Canal</label>
+          <select id="g1canal">
+            <option value="sms">SMS</option>
+            <option value="whatsapp">WhatsApp</option>
+            <option value="ambos">SMS + WhatsApp</option>
+          </select>
+        </div>
+        <div class="cf-group">
+          <label>Mensagem</label>
+          <input type="text" id="g1msg" value="Oi {nome}! Sentimos sua falta na {loja}. Seu cashback de R$ {cashback} está esperando! 🎁">
+        </div>
+      </div>
+    </div>
+
+    <div class="gatilho-card">
+      <div class="gatilho-header">
+        <h4>🎂 Aniversário do cliente</h4>
+        <div class="toggle-wrap">
+          <div class="toggle" id="g2toggle" onclick="toggleGatilho('g2')"></div>
+          <span class="toggle-lbl" id="g2lbl">Desativado</span>
+        </div>
+      </div>
+      <div class="gatilho-body">
+        <div class="cf-group">
+          <label>Dias antes do aniversário</label>
+          <input type="number" id="g2dias" value="1" min="0">
+        </div>
+        <div class="cf-group">
+          <label>Canal</label>
+          <select id="g2canal">
+            <option value="whatsapp">WhatsApp</option>
+            <option value="sms">SMS</option>
+          </select>
+        </div>
+        <div class="cf-group">
+          <label>Mensagem</label>
+          <input type="text" id="g2msg" value="Feliz aniversário, {nome}! 🎉 Presente especial: cashback de R$ {cashback} + 10% de desconto na {loja} hoje!">
+        </div>
+      </div>
+    </div>
+
+    <div class="gatilho-card">
+      <div class="gatilho-header">
+        <h4>💰 Cliente atinge cashback mínimo</h4>
+        <div class="toggle-wrap">
+          <div class="toggle" id="g3toggle" onclick="toggleGatilho('g3')"></div>
+          <span class="toggle-lbl" id="g3lbl">Desativado</span>
+        </div>
+      </div>
+      <div class="gatilho-body">
+        <div class="cf-group">
+          <label>Valor mínimo de cashback (R$)</label>
+          <input type="number" id="g3valor" value="50" min="1">
+        </div>
+        <div class="cf-group">
+          <label>Canal</label>
+          <select id="g3canal">
+            <option value="whatsapp">WhatsApp</option>
+            <option value="sms">SMS</option>
+          </select>
+        </div>
+        <div class="cf-group">
+          <label>Mensagem</label>
+          <input type="text" id="g3msg" value="Boa notícia, {nome}! Você acumulou R$ {cashback} em cashback na {loja}. Que tal usar na próxima compra? 💰">
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="salvarGatilhos()" style="margin-top:4px">💾 Salvar Gatilhos</button>
+  </div>
+
+  <!-- CONFIG ZENVIA -->
+  <div class="tab-content" id="tab-config">
+    <div class="config-grid">
+      <div class="config-card">
+        <h3>🔑 Credenciais Zenvia</h3>
+        <div class="cf-group">
+          <label>API Key (Token)</label>
+          <input type="password" id="zApiKey" placeholder="sua-api-key-zenvia">
+        </div>
+        <div class="cf-group">
+          <label>Sender ID (SMS)</label>
+          <input type="text" id="zSenderId" placeholder="SWNOutlet">
+        </div>
+        <div class="cf-group">
+          <label>Número padrão WhatsApp</label>
+          <input type="text" id="zNumWA" placeholder="5521999999999">
+        </div>
+        <div class="cf-group">
+          <label>Número de teste (para envios de teste)</label>
+          <input type="text" id="zNumTeste" placeholder="5521999999999">
+        </div>
+        <button class="btn btn-primary" onclick="salvarConfigZenvia()" style="width:100%;margin-top:4px">💾 Salvar</button>
+        <button class="btn btn-ghost" onclick="testarZenvia()" style="width:100%;margin-top:8px">🧪 Testar conexão</button>
+      </div>
+
+      <div class="config-card">
+        <h3>📱 Números por Loja <span style="font-size:11px;color:var(--mt);font-weight:400">(opcional — para quando tiver múltiplos)</span></h3>
+        <div class="lojas-config">
+          <div class="lojas-config-header">
+            <h3 style="font-size:12px">Loja</h3>
+          </div>
+          <div class="loja-row">
+            <div>
+              <div class="loja-nome">Número padrão</div>
+              <div style="font-size:11px;color:var(--mt)">Usado quando loja não tem número próprio</div>
+            </div>
+            <input class="loja-input" id="numPadrao" placeholder="Igual ao número padrão acima" readonly style="opacity:.5">
+            <span class="badge-loja badge-padrao">padrão</span>
+          </div>
+          <div class="loja-row">
+            <div class="loja-nome">FORUM OUTLET</div>
+            <input class="loja-input" id="numForum" placeholder="5521... (deixe vazio = usa padrão)">
+            <span style="font-size:11px;color:var(--mt)">Vazio = usa padrão</span>
+          </div>
+          <div class="loja-row">
+            <div class="loja-nome">COLCCI OUTLET OPRJ</div>
+            <input class="loja-input" id="numColcci" placeholder="5521... (deixe vazio = usa padrão)">
+            <span style="font-size:11px;color:var(--mt)">Vazio = usa padrão</span>
+          </div>
+          <div class="loja-row">
+            <div class="loja-nome">TRITON OUTLET</div>
+            <input class="loja-input" id="numTriton" placeholder="5521... (deixe vazio = usa padrão)">
+            <span style="font-size:11px;color:var(--mt)">Vazio = usa padrão</span>
+          </div>
+        </div>
+        <button class="btn btn-ghost" onclick="salvarNumeros()" style="width:100%;margin-top:8px">💾 Salvar números</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SEGMENTOS = {
+  campiao:{label:'Campeões',emoji:'🏆'},leal:{label:'Leais',emoji:'⭐'},
+  novo:{label:'Novos',emoji:'🌱'},potencial:{label:'Potencial Leal',emoji:'💎'},
+  promissor:{label:'Promissores',emoji:'🚀'},em_risco:{label:'Em Risco',emoji:'⚠️'},
+  precisa_atencao:{label:'Precisa Atenção',emoji:'👀'},
+  nao_pode_perder:{label:'Não Pode Perder',emoji:'🆘'},
+  hibernando:{label:'Hibernando',emoji:'😴'},perdido:{label:'Perdidos',emoji:'💀'}
+}
+
+let cfg = JSON.parse(localStorage.getItem('cf_zenvia_cfg') || '{}')
+let campanhas = JSON.parse(localStorage.getItem('cf_campanhas') || '[]')
+let gatilhos = JSON.parse(localStorage.getItem('cf_gatilhos') || '{}')
+let canaisAtivos = { wa: false, sms: true }
+let segsSelecionados = new Set()
+
+// Boot
+;(function() {
+  // Preenche config
+  if (cfg.apiKey) document.getElementById('zApiKey').value = cfg.apiKey
+  if (cfg.senderId) document.getElementById('zSenderId').value = cfg.senderId
+  if (cfg.numWA) document.getElementById('zNumWA').value = cfg.numWA
+  if (cfg.numTeste) document.getElementById('zNumTeste').value = cfg.numTeste
+  if (cfg.numForum) document.getElementById('numForum').value = cfg.numForum
+  if (cfg.numColcci) document.getElementById('numColcci').value = cfg.numColcci
+  if (cfg.numTriton) document.getElementById('numTriton').value = cfg.numTriton
+
+  // Status badge
+  if (cfg.apiKey) {
+    const b = document.getElementById('zenviaStatus')
+    b.textContent = 'Zenvia: conectado'
+    b.classList.add('on')
+  }
+
+  // Segmentos
+  renderSegChips()
+  renderHistorico()
+  renderGatilhos()
+
+  // Data default = agora + 1h
+  const d = new Date(); d.setHours(d.getHours()+1)
+  document.getElementById('campData').value = d.toISOString().slice(0,16)
+})()
+
+// TABS
+function showTab(id) {
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'))
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'))
+  document.getElementById('tab-'+id).classList.add('active')
+  event.currentTarget.classList.add('active')
+}
+
+// CANAIS
+function toggleCanal(c) {
+  canaisAtivos[c] = !canaisAtivos[c]
+  document.getElementById('toggle'+c.toUpperCase()).classList.toggle('ativo', canaisAtivos[c])
+  atualizarCharCount()
+}
+
+// SEGMENTOS
+function renderSegChips() {
+  const raw = localStorage.getItem('cf_clientes_v2')
+  const lista = raw ? (JSON.parse(raw).clientes||[]) : []
+  const cont = document.getElementById('segChips')
+  cont.innerHTML = Object.entries(SEGMENTOS).map(([k,s]) => {
+    const n = lista.filter(c=>c.segmento===k).length
+    return `<div class="seg-chip" id="seg_${k}" onclick="toggleSeg('${k}')">${s.emoji} ${s.label} <span class="count">${n}</span></div>`
+  }).join('')
+}
+
+function toggleSeg(k) {
+  if (segsSelecionados.has(k)) segsSelecionados.delete(k)
+  else segsSelecionados.add(k)
+  document.getElementById('seg_'+k).classList.toggle('sel', segsSelecionados.has(k))
+  atualizarEstimativa()
+}
+
+function atualizarEstimativa() {
+  const raw = localStorage.getItem('cf_clientes_v2')
+  const lista = raw ? (JSON.parse(raw).clientes||[]) : []
+  const sel = [...segsSelecionados]
+  const n = lista.filter(c => sel.includes(c.segmento) && c.telefone).length
+  const custo = n * (canaisAtivos.sms && canaisAtivos.wa ? 0.39 : canaisAtivos.wa ? 0.30 : 0.09)
+  document.getElementById('estimativa').textContent = n + ' destinatários · ~R$ ' + custo.toFixed(2)
+}
+
+// PREVIEW
+function atualizarPreview() {
+  const msg = document.getElementById('campMsg').value
+  const exemplo = { nome: 'Maria Silva', cashback: 'R$ 45,00', loja: 'Forum Outlet', cpf: '123.456.789-00', qtd_compras: '7' }
+  let preview = msg
+  for (const [k,v] of Object.entries(exemplo)) preview = preview.replace(new RegExp('{'+k+'}','g'), v)
+  document.getElementById('preview').textContent = preview || 'Escreva a mensagem acima...'
+  atualizarCharCount()
+}
+
+function atualizarCharCount() {
+  const msg = document.getElementById('campMsg').value
+  const n = msg.length
+  const limit = canaisAtivos.sms ? 160 : 1000
+  const el = document.getElementById('charCount')
+  const tipo = canaisAtivos.sms ? 'SMS' : 'WhatsApp'
+  el.textContent = n + ' / ' + limit + ' chars (' + tipo + ')'
+  el.className = 'char-count' + (n > limit ? ' char-warn' : '')
+}
+
+function inserirVar(v) {
+  const ta = document.getElementById('campMsg')
+  const pos = ta.selectionStart
+  ta.value = ta.value.slice(0,pos) + v + ta.value.slice(pos)
+  ta.focus()
+  ta.setSelectionRange(pos+v.length, pos+v.length)
+  atualizarPreview()
+}
+
+// CAMPANHA
+function criarCampanha() {
+  if (!cfg.apiKey) { showTab('config'); toast('⚠️ Configure a API Key da Zenvia primeiro'); return }
+  const nome = document.getElementById('campNome').value
+  const msg = document.getElementById('campMsg').value
+  if (!nome) { toast('⚠️ Dê um nome à campanha'); return }
+  if (!msg) { toast('⚠️ Escreva a mensagem'); return }
+  if (!segsSelecionados.size) { toast('⚠️ Selecione pelo menos 1 segmento'); return }
+
+  const camp = {
+    id: Date.now(),
+    nome, msg,
+    canais: Object.entries(canaisAtivos).filter(([,v])=>v).map(([k])=>k),
+    segmentos: [...segsSelecionados],
+    loja: document.getElementById('campLoja').value,
+    data: document.getElementById('campData').value,
+    status: 'agendada',
+    criadaEm: new Date().toISOString()
+  }
+
+  const agora = new Date()
+  const dataEnvio = new Date(camp.data)
+
+  if (dataEnvio <= agora) {
+    // Envia agora
+    enviarCampanha(camp)
+  } else {
+    // Agenda
+    campanhas.unshift({ ...camp, status: 'agendada' })
+    localStorage.setItem('cf_campanhas', JSON.stringify(campanhas))
+    renderHistorico()
+    toast('📅 Campanha agendada para ' + dataEnvio.toLocaleString('pt-BR'))
+    showTab('historico')
+  }
+}
+
+async function enviarCampanha(camp) {
+  const raw = localStorage.getItem('cf_clientes_v2')
+  const lista = raw ? (JSON.parse(raw).clientes||[]) : []
+  const destinos = lista.filter(c => camp.segmentos.includes(c.segmento) && c.telefone)
+
+  if (!destinos.length) { toast('⚠️ Nenhum cliente com telefone nos segmentos selecionados'); return }
+
+  document.getElementById('campProgress').classList.add('show')
+  let enviados = 0, erros = 0
+
+  for (let i = 0; i < destinos.length; i++) {
+    const c = destinos[i]
+    const msg = camp.msg
+      .replace(/{nome}/g, c.nome.split(' ')[0])
+      .replace(/{cashback}/g, 'R$ '+(c.cashback||0).toFixed(2).replace('.',','))
+      .replace(/{loja}/g, c.loja || camp.loja || 'nossa loja')
+      .replace(/{cpf}/g, fmtCpf(c.cpf))
+      .replace(/{qtd_compras}/g, c.qtdVendas||0)
+
+    const tel = c.telefone.replace(/\D/g,'')
+    if (tel.length < 10) continue
+
+    try {
+      if (camp.canais.includes('sms')) await enviarSMS(tel, msg)
+      if (camp.canais.includes('wa')) await enviarWA(tel, msg)
+      enviados++
+    } catch(e) { erros++ }
+
+    const pct = Math.round((i+1)/destinos.length*100)
+    document.getElementById('campProgressBar').style.width = pct+'%'
+    await new Promise(r=>setTimeout(r,50))
+  }
+
+  document.getElementById('campProgress').classList.remove('show')
+  camp.status = 'enviada'
+  camp.enviados = enviados
+  camp.erros = erros
+  camp.enviadaEm = new Date().toISOString()
+  campanhas.unshift(camp)
+  localStorage.setItem('cf_campanhas', JSON.stringify(campanhas))
+  renderHistorico()
+  toast('✅ ' + enviados + ' mensagens enviadas!' + (erros?' ('+erros+' erros)':''))
+  showTab('historico')
+}
+
+// API ZENVIA
+async function enviarSMS(tel, msg) {
+  const r = await fetch('https://api.zenvia.com/v2/channels/sms/messages', {
+    method: 'POST',
+    headers: { 'X-API-Token': cfg.apiKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: cfg.senderId || 'SWNOutlet',
+      to: '+55' + tel,
+      contents: [{ type: 'text', text: msg }]
+    })
+  })
+  if (!r.ok) throw new Error('SMS error ' + r.status)
+}
+
+async function enviarWA(tel, msg) {
+  const from = cfg.numWA || ''
+  const r = await fetch('https://api.zenvia.com/v2/channels/whatsapp/messages', {
+    method: 'POST',
+    headers: { 'X-API-Token': cfg.apiKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from,
+      to: '+55' + tel,
+      contents: [{ type: 'text', text: msg }]
+    })
+  })
+  if (!r.ok) throw new Error('WA error ' + r.status)
+}
+
+// TESTE
+async function testarEnvio() {
+  if (!cfg.apiKey) { toast('⚠️ Configure a API Key primeiro'); return }
+  if (!cfg.numTeste) { toast('⚠️ Configure o número de teste'); return }
+  const msg = document.getElementById('campMsg').value
+  if (!msg) { toast('⚠️ Escreva a mensagem'); return }
+  const preview = msg.replace(/{nome}/g,'Teste').replace(/{cashback}/g,'R$ 50,00').replace(/{loja}/g,'SWN Outlet').replace(/{cpf}/g,'000.000.000-00').replace(/{qtd_compras}/g,'5')
+  try {
+    if (canaisAtivos.sms) await enviarSMS(cfg.numTeste.replace(/\D/g,''), preview)
+    if (canaisAtivos.wa) await enviarWA(cfg.numTeste.replace(/\D/g,''), preview)
+    toast('✅ Mensagem de teste enviada!')
+  } catch(e) { toast('❌ Erro: ' + e.message) }
+}
+
+async function testarZenvia() {
+  const key = document.getElementById('zApiKey').value
+  if (!key) { toast('⚠️ Insira a API Key'); return }
+  try {
+    const r = await fetch('https://api.zenvia.com/v2/subscriptions', {
+      headers: { 'X-API-Token': key }
+    })
+    if (r.ok || r.status === 404) {
+      toast('✅ Zenvia conectada!')
+      document.getElementById('zenviaStatus').textContent = 'Zenvia: conectado'
+      document.getElementById('zenviaStatus').classList.add('on')
+    } else toast('❌ Erro: HTTP ' + r.status)
+  } catch(e) { toast('❌ Não foi possível conectar') }
+}
+
+function salvarRascunho() {
+  const camp = { id: Date.now(), nome: document.getElementById('campNome').value||'Rascunho', msg: document.getElementById('campMsg').value, status: 'rascunho', criadaEm: new Date().toISOString(), segmentos:[...segsSelecionados], canais: Object.entries(canaisAtivos).filter(([,v])=>v).map(([k])=>k) }
+  campanhas.unshift(camp)
+  localStorage.setItem('cf_campanhas', JSON.stringify(campanhas))
+  renderHistorico()
+  toast('💾 Rascunho salvo!')
+}
+
+// HISTORICO
+function renderHistorico() {
+  const el = document.getElementById('campList')
+  if (!campanhas.length) { el.innerHTML = '<div style="text-align:center;padding:60px;color:var(--mt);font-size:13px">Nenhuma campanha ainda</div>'; return }
+  el.innerHTML = campanhas.map(c => {
+    const icon = c.canais?.includes('sms') && c.canais?.includes('wa') ? 'both' : c.canais?.includes('wa') ? 'wa' : 'sms'
+    const iconLabel = icon==='both'?'📲':icon==='wa'?'💬':'📱'
+    const statusCls = c.status==='enviada'?'status-enviada':c.status==='agendada'?'status-agendada':'status-rascunho'
+    const statusLabel = c.status==='enviada'?'Enviada':c.status==='agendada'?'Agendada':'Rascunho'
+    return `<div class="camp-card">
+      <div class="camp-icon ${icon}">${iconLabel}</div>
+      <div class="camp-info">
+        <div class="camp-nome">${esc(c.nome)} <span class="status-pill ${statusCls}">${statusLabel}</span></div>
+        <div class="camp-meta">${(c.segmentos||[]).join(', ')} · ${c.criadaEm?new Date(c.criadaEm).toLocaleString('pt-BR'):''}</div>
+      </div>
+      ${c.enviados ? `<div class="camp-stats"><div><div class="camp-stat-val green">${c.enviados}</div><div class="camp-stat-lbl">Enviados</div></div>${c.erros?`<div><div class="camp-stat-val" style="color:#e24b4a">${c.erros}</div><div class="camp-stat-lbl">Erros</div></div>`:''}</div>` : ''}
+      <div class="camp-actions">
+        ${c.status==='agendada'?`<button class="btn btn-primary btn-sm" onclick="enviarAgora(${c.id})">Enviar agora</button>`:''}
+        <button class="btn btn-danger btn-sm" onclick="removerCamp(${c.id})">✕</button>
+      </div>
+    </div>`
+  }).join('')
+}
+
+function enviarAgora(id) {
+  const camp = campanhas.find(c=>c.id===id)
+  if (camp) { campanhas = campanhas.filter(c=>c.id!==id); enviarCampanha(camp) }
+}
+
+function removerCamp(id) {
+  campanhas = campanhas.filter(c=>c.id!==id)
+  localStorage.setItem('cf_campanhas', JSON.stringify(campanhas))
+  renderHistorico()
+}
+
+// GATILHOS
+function toggleGatilho(id) {
+  const el = document.getElementById(id+'toggle')
+  const lbl = document.getElementById(id+'lbl')
+  const on = el.classList.toggle('on')
+  lbl.textContent = on ? 'Ativado' : 'Desativado'
+}
+
+function renderGatilhos() {
+  if (gatilhos.g1) document.getElementById('g1toggle').classList.add('on'), document.getElementById('g1lbl').textContent='Ativado'
+  if (gatilhos.g2) document.getElementById('g2toggle').classList.add('on'), document.getElementById('g2lbl').textContent='Ativado'
+  if (gatilhos.g3) document.getElementById('g3toggle').classList.add('on'), document.getElementById('g3lbl').textContent='Ativado'
+  if (gatilhos.g1dias) document.getElementById('g1dias').value = gatilhos.g1dias
+  if (gatilhos.g2dias) document.getElementById('g2dias').value = gatilhos.g2dias
+  if (gatilhos.g3valor) document.getElementById('g3valor').value = gatilhos.g3valor
+}
+
+function salvarGatilhos() {
+  gatilhos = {
+    g1: document.getElementById('g1toggle').classList.contains('on'),
+    g1dias: document.getElementById('g1dias').value,
+    g1canal: document.getElementById('g1canal').value,
+    g1msg: document.getElementById('g1msg').value,
+    g2: document.getElementById('g2toggle').classList.contains('on'),
+    g2dias: document.getElementById('g2dias').value,
+    g2canal: document.getElementById('g2canal').value,
+    g2msg: document.getElementById('g2msg').value,
+    g3: document.getElementById('g3toggle').classList.contains('on'),
+    g3valor: document.getElementById('g3valor').value,
+    g3canal: document.getElementById('g3canal').value,
+    g3msg: document.getElementById('g3msg').value,
+  }
+  localStorage.setItem('cf_gatilhos', JSON.stringify(gatilhos))
+  toast('✅ Gatilhos salvos!')
+}
+
+// CONFIG
+function salvarConfigZenvia() {
+  cfg = { apiKey: document.getElementById('zApiKey').value, senderId: document.getElementById('zSenderId').value, numWA: document.getElementById('zNumWA').value, numTeste: document.getElementById('zNumTeste').value }
+  localStorage.setItem('cf_zenvia_cfg', JSON.stringify(cfg))
+  if (cfg.apiKey) { document.getElementById('zenviaStatus').textContent = 'Zenvia: conectado'; document.getElementById('zenviaStatus').classList.add('on') }
+  toast('✅ Configuração salva!')
+}
+
+function salvarNumeros() {
+  cfg.numForum = document.getElementById('numForum').value
+  cfg.numColcci = document.getElementById('numColcci').value
+  cfg.numTriton = document.getElementById('numTriton').value
+  localStorage.setItem('cf_zenvia_cfg', JSON.stringify(cfg))
+  toast('✅ Números salvos!')
+}
+
+// UTILS
+function fmtCpf(v) { const d=(v||'').replace(/\D/g,''); return d.length===11?d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4'):v }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;') }
+function toast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3200) }
+</script>
+</body>
+</html>
