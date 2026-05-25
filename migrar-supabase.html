@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>CashFlow — Migrar para Supabase</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080810;--s:#10101a;--s2:#18182a;--bd:#252538;--ac:#00e5a0;--ac2:rgba(0,229,160,.1);--ac3:rgba(0,229,160,.2);--tx:#e6e6f0;--mt:#666688;--fn:'IBM Plex Sans',sans-serif;--mo:'IBM Plex Mono',monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:var(--fn);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:var(--s);border:1px solid var(--bd);border-radius:16px;padding:32px;width:100%;max-width:580px}
+h1{font-size:20px;font-weight:600;letter-spacing:-.03em;margin-bottom:4px}
+h1 span{color:var(--ac)}
+.sub{font-size:13px;color:var(--mt);margin-bottom:28px;line-height:1.6}
+.step{display:flex;gap:14px;margin-bottom:20px;padding:16px;background:var(--s2);border:1px solid var(--bd);border-radius:12px}
+.step-num{width:28px;height:28px;border-radius:8px;background:var(--ac2);border:1px solid var(--ac3);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:var(--ac);flex-shrink:0}
+.step-body h3{font-size:14px;font-weight:500;margin-bottom:4px}
+.step-body p{font-size:12px;color:var(--mt);line-height:1.5;margin-bottom:8px}
+.step-body code{font-family:var(--mo);font-size:11px;background:var(--bg);padding:2px 6px;border-radius:4px;color:var(--ac)}
+.cf-group{margin-bottom:12px}
+.cf-group label{font-family:var(--mo);font-size:10px;color:var(--mt);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em}
+.cf-group input{width:100%;padding:10px 12px;background:var(--s2);border:1px solid var(--bd);border-radius:9px;color:var(--tx);font-size:13px;font-family:var(--mo);outline:none}
+.cf-group input:focus{border-color:var(--ac)}
+.btn{width:100%;padding:12px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:none;font-family:var(--fn);transition:all .15s;margin-top:4px}
+.btn-primary{background:var(--ac);color:#080810}.btn-primary:hover{filter:brightness(1.1)}.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-ghost{background:var(--s2);color:var(--tx);border:1px solid var(--bd)}.btn-ghost:hover{border-color:var(--ac);color:var(--ac)}
+.progress-wrap{height:6px;background:var(--bd);border-radius:3px;margin:14px 0;overflow:hidden;display:none}
+.progress-wrap.show{display:block}
+.progress-bar{height:100%;background:var(--ac);border-radius:3px;transition:width .3s;width:0%}
+.log{background:var(--s2);border:1px solid var(--bd);border-radius:9px;padding:12px;max-height:200px;overflow-y:auto;margin:12px 0;display:none}
+.log.show{display:block}
+.log-row{font-family:var(--mo);font-size:11px;color:var(--mt);padding:2px 0;display:flex;gap:8px}
+.log-t{color:var(--ac);min-width:58px}
+.log-ok{color:var(--ac)}.log-err{color:#e24b4a}
+.done{background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.2);border-radius:10px;padding:18px;text-align:center;display:none;margin-top:16px}
+.done.show{display:block}
+.done h3{color:var(--ac);margin-bottom:6px}
+.done p{font-size:12px;color:var(--mt);margin-bottom:14px}
+.links{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.link{padding:9px 16px;background:var(--s2);color:var(--ac);border:1px solid rgba(0,229,160,.25);border-radius:9px;font-size:12px;text-decoration:none}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}
+.stat{background:var(--s2);border-radius:9px;padding:12px;text-align:center}
+.stat-val{font-size:20px;font-weight:600;color:var(--ac)}
+.stat-lbl{font-size:10px;color:var(--mt);font-family:var(--mo);text-transform:uppercase;margin-top:2px}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Cash<span>Flow</span> — Migrar para Supabase</h1>
+  <div class="sub">Migra todos os dados do localStorage para o banco de dados Supabase. Faça isso uma vez — depois o app usa o Supabase automaticamente.</div>
+
+  <!-- DADOS LOCAIS -->
+  <div class="stats-row" id="statsLocal">
+    <div class="stat"><div class="stat-val" id="sClientes">—</div><div class="stat-lbl">Clientes</div></div>
+    <div class="stat"><div class="stat-val" id="sCashback">—</div><div class="stat-lbl">Cashback</div></div>
+    <div class="stat"><div class="stat-val" id="sResgates">—</div><div class="stat-lbl">Resgates</div></div>
+  </div>
+
+  <!-- PASSO 1: URL e Chave -->
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h3>Credenciais do Supabase</h3>
+      <p>Acesse <code>supabase.com → seu projeto → Settings → API</code> e copie a URL e a chave <code>anon public</code></p>
+      <div class="cf-group">
+        <label>Project URL</label>
+        <input type="text" id="sbUrl" placeholder="https://xxxxxxxxxxx.supabase.co">
+      </div>
+      <div class="cf-group">
+        <label>Anon Key (public)</label>
+        <input type="password" id="sbKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+      </div>
+    </div>
+  </div>
+
+  <!-- PASSO 2: Schema -->
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h3>Criar as tabelas</h3>
+      <p>No Supabase, vá em <code>SQL Editor → New query</code>, cole o conteúdo do arquivo <code>supabase-schema.sql</code> e execute.</p>
+      <a href="supabase-schema.sql" download class="btn btn-ghost" style="display:inline-block;width:auto;padding:7px 14px;font-size:12px;margin-top:0">⬇ Baixar supabase-schema.sql</a>
+    </div>
+  </div>
+
+  <!-- PASSO 3: Migrar -->
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h3>Migrar dados</h3>
+      <p>Com as tabelas criadas, clique abaixo para migrar todos os clientes e resgates do localStorage para o Supabase.</p>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" id="btnMigrar" onclick="iniciar()">🚀 Iniciar Migração</button>
+  <button class="btn btn-ghost" onclick="testarConexao()" style="margin-top:8px">🧪 Testar conexão</button>
+
+  <div class="progress-wrap" id="prog"><div class="progress-bar" id="progBar"></div></div>
+  <div class="log" id="log"></div>
+
+  <div class="done" id="done">
+    <h3>✅ Migração concluída!</h3>
+    <p id="doneMsg">Todos os dados estão no Supabase.</p>
+    <div class="links">
+      <a href="index.html" class="link">🏠 Painel Principal</a>
+      <a href="rfm.html" class="link">📊 Painel RFM</a>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initDB, loadDBConfig, isConfigured, migrarLocalStorage, getStats, getClientes } from './src/js/db.js'
+
+// Carrega stats do localStorage
+;(function() {
+  try {
+    const raw = localStorage.getItem('cf_clientes_v2')
+    const clientes = raw ? (JSON.parse(raw).clientes||[]) : []
+    const cashback = clientes.reduce((s,c)=>s+(c.cashback||0),0)
+    const resgates = JSON.parse(localStorage.getItem('cf_resgates')||'[]').length
+    document.getElementById('sClientes').textContent = clientes.length
+    document.getElementById('sCashback').textContent = 'R$ ' + Math.round(cashback/1000) + 'k'
+    document.getElementById('sResgates').textContent = resgates
+  } catch(e) {}
+
+  // Preenche URL/key se já salvos
+  const cfg = loadDBConfig()
+  if (cfg.url) document.getElementById('sbUrl').value = cfg.url
+  if (cfg.anonKey) document.getElementById('sbKey').value = cfg.anonKey
+})()
+
+async function iniciar() {
+  const url = document.getElementById('sbUrl').value.trim().replace(/\/+$/, '')
+  const key = document.getElementById('sbKey').value.trim()
+  if (!url || !key) { alert('Preencha a URL e a chave do Supabase'); return }
+
+  initDB(url, key)
+
+  document.getElementById('btnMigrar').disabled = true
+  document.getElementById('prog').classList.add('show')
+  document.getElementById('log').classList.add('show')
+
+  try {
+    await migrarLocalStorage((atual, total, msg) => {
+      const pct = Math.round(atual/total*100)
+      document.getElementById('progBar').style.width = pct+'%'
+      addLog(msg, 'ok')
+    })
+
+    addLog('✅ Migração concluída!', 'ok')
+    document.getElementById('done').classList.add('show')
+    document.getElementById('doneMsg').textContent =
+      `${document.getElementById('sClientes').textContent} clientes migrados para o Supabase com sucesso.`
+
+    // Salva flag de que está usando Supabase
+    localStorage.setItem('cf_usa_supabase', '1')
+
+  } catch(e) {
+    addLog('❌ Erro: ' + e.message, 'err')
+    document.getElementById('btnMigrar').disabled = false
+    alert('Erro: ' + e.message + '\n\nVerifique se as tabelas foram criadas no Supabase.')
+  }
+}
+
+async function testarConexao() {
+  const url = document.getElementById('sbUrl').value.trim().replace(/\/+$/, '')
+  const key = document.getElementById('sbKey').value.trim()
+  if (!url || !key) { alert('Preencha a URL e a chave'); return }
+  initDB(url, key)
+  try {
+    const res = await fetch(`${url}/rest/v1/clientes?select=count&limit=1`, {
+      headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+    })
+    if (res.ok) {
+      alert('✅ Conexão OK! Supabase acessível.')
+    } else {
+      const err = await res.json().catch(()=>({}))
+      alert('❌ Erro: ' + (err.message || 'HTTP ' + res.status) + '\n\nVerifique se as tabelas foram criadas.')
+    }
+  } catch(e) { alert('❌ Não foi possível conectar: ' + e.message) }
+}
+
+function addLog(msg, type='info') {
+  const t = new Date().toLocaleTimeString('pt-BR')
+  const cls = type==='ok'?'log-ok':type==='err'?'log-err':''
+  const row = document.createElement('div')
+  row.className = 'log-row'
+  row.innerHTML = `<span class="log-t">${t}</span><span class="${cls}">${msg}</span>`
+  const box = document.getElementById('log')
+  box.appendChild(row)
+  box.scrollTop = box.scrollHeight
+}
+
+window.iniciar = iniciar
+window.testarConexao = testarConexao
+</script>
+</body>
+</html>
