@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CashFlow — Gestão de Cashback Almode</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="src/css/style.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div>
+    <div class="logo">Cash<span class="logo-accent">Flow</span></div>
+    <div class="logo-sub">powered by Almode API</div>
+  </div>
+  <div class="badges">
+    <span class="badge" id="apiBadge" data-live="false">API: configurar</span>
+    <span class="badge" id="pctBadge">5% cashback</span>
+    <button class="btn btn-ghost" style="padding:5px 12px;font-size:11px" onclick="App.openPopup()">
+      🔍 Abrir Pop-up Caixa
+    </button>
+  </div>
+</header>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <span class="nav-label">Menu</span>
+    <div class="nav-item active" onclick="showSection('dashboard',this)">
+      <span class="nav-icon">▦</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="showSection('clientes',this)">
+      <span class="nav-icon">◎</span> Clientes
+    </div>
+    <div class="nav-item" onclick="showSection('sync',this)">
+      <span class="nav-icon">↺</span> Sincronizar
+    </div>
+    <div class="nav-item" onclick="showSection('popup',this)">
+      <span class="nav-icon">⊡</span> Pop-up Vendedor
+    </div>
+    <div class="nav-item" onclick="showSection('api',this)">
+      <span class="nav-icon">⌁</span> Endpoints Almode
+    </div>
+
+    <!-- CONFIG -->
+    <div class="config-box">
+      <h4>⚙ Configuração API</h4>
+      <div class="cf-group">
+        <label>Domínio Almode</label>
+        <input type="text" id="cfDomain" placeholder="suaempresa.almode.dev">
+      </div>
+      <div class="cf-group">
+        <label>Token Bearer</label>
+        <input type="password" id="cfToken" placeholder="token-do-admin">
+      </div>
+      <div class="cf-group">
+        <label>CNPJ da Loja</label>
+        <input type="text" id="cfCnpj" placeholder="00000000000000">
+      </div>
+      <div class="cf-group">
+        <label>% Cashback</label>
+        <input type="number" id="cfPct" value="5" min="1" max="30">
+      </div>
+      <button class="btn-save" onclick="App.onSaveConfig()">💾 Salvar Configuração</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <section class="section active" id="section-dashboard">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">Visão geral do programa de cashback</div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-lbl">Clientes</div>
+          <div class="stat-val" id="sTotal">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Com Saldo</div>
+          <div class="stat-val" id="sComSaldo">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Total Cashback</div>
+          <div class="stat-val green" id="sTotalCashback">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Última Sync</div>
+          <div class="stat-val" id="sLastSync" style="font-size:14px;padding-top:4px">—</div>
+        </div>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-box">
+          <h3>Como usar</h3>
+          <div class="step"><div class="step-n">1</div><div class="step-t">
+            <h4>Configure a API</h4>
+            <p>Insira seu domínio Almode, token Bearer do admin e CNPJ da loja no painel lateral.</p>
+          </div></div>
+          <div class="step"><div class="step-n">2</div><div class="step-t">
+            <h4>Sincronize os clientes</h4>
+            <p>Vai em <code>Sincronizar</code> e clique em <code>Sincronizar Clientes</code>. O sistema puxa todos via <code>/clientes/resumido-por-loja</code>.</p>
+          </div></div>
+          <div class="step"><div class="step-n">3</div><div class="step-t">
+            <h4>Caixa usa o Pop-up</h4>
+            <p>Clique em <code>Abrir Pop-up Caixa</code>. A janela fica sempre na frente. Vendedor digita o CPF e vê o saldo na hora.</p>
+          </div></div>
+        </div>
+        <div class="info-box">
+          <h3>Arquitetura do sistema</h3>
+          <div class="step"><div class="step-n">→</div><div class="step-t">
+            <h4><code>almode.js</code></h4>
+            <p>Único ponto de contato com a API. O agente vai preencher os stubs de cashback nativo aqui.</p>
+          </div></div>
+          <div class="step"><div class="step-n">→</div><div class="step-t">
+            <h4><code>store.js</code></h4>
+            <p>Estado global reativo. Persiste config e clientes no localStorage.</p>
+          </div></div>
+          <div class="step"><div class="step-n">→</div><div class="step-t">
+            <h4><code>app.js</code></h4>
+            <p>Controller que conecta UI ↔ store ↔ Almode. Toda lógica fica aqui, separada do HTML.</p>
+          </div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CLIENTES -->
+    <section class="section" id="section-clientes">
+      <div class="page-title">Clientes</div>
+      <div class="page-sub">Base via <code>disponivelEmCashback</code> — API Almode</div>
+      <div class="table-card">
+        <div class="table-top">
+          <h3>Todos os clientes</h3>
+          <div class="search">
+            <input type="text" placeholder="Nome ou CPF..." oninput="App.filterTable(this.value)">
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>CPF / CNPJ</th>
+              <th>Cashback Disponível</th>
+              <th>Telefone</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="clientsTbody">
+            <tr><td colspan="5" style="text-align:center;padding:48px;color:var(--muted)">
+              Sincronize para ver os dados
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SYNC -->
+    <section class="section" id="section-sync">
+      <div class="page-title">Sincronizar</div>
+      <div class="page-sub">Importar clientes via API Almode em tempo real</div>
+
+      <div class="api-info">
+        <h4>Endpoints utilizados nesta sincronização</h4>
+        <div class="api-row"><span class="method m-get">GET</span><span class="api-path">/api/public/clientes/resumido-por-loja?cnpjLoja={cnpj}</span></div>
+        <div class="api-desc">Lista todos os clientes ativos da loja</div>
+        <div class="api-row"><span class="method m-get">GET</span><span class="api-path">/api/public/clientes?busca={cpf}</span></div>
+        <div class="api-desc">Detalhe do cliente com campo <code>disponivelEmCashback</code></div>
+      </div>
+
+      <div class="sync-bar">
+        <div class="sync-left">
+          <div class="sync-ico">⌁</div>
+          <div>
+            <div class="sync-title">Agente Almode</div>
+            <div class="sync-sub" id="syncStatus">Configure domínio + token para iniciar</div>
+          </div>
+        </div>
+        <div class="sync-right">
+          <button class="btn btn-ghost" onclick="App.onTestConexao()">Testar API</button>
+          <button class="btn btn-primary" id="btnSync" onclick="App.onSync()">↺ Sincronizar Clientes</button>
+        </div>
+      </div>
+
+      <div class="progress-wrap" id="progress" style="display:none">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+
+      <div class="log-card">
+        <h4>// LOG</h4>
+        <div id="logWrap">
+          <div class="log-row"><span class="log-t">--:--:--</span><span>Aguardando...</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- POPUP -->
+    <section class="section" id="section-popup">
+      <div class="page-title">Pop-up do Vendedor</div>
+      <div class="page-sub">Consulta em tempo real via API Almode — sempre na frente do PDV</div>
+
+      <div style="display:flex;gap:24px;align-items:flex-start">
+        <!-- Janela simulada -->
+        <div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Simulação interativa:</div>
+          <div style="background:#0d0d1a;border:1px solid var(--border);border-radius:14px;overflow:hidden;width:360px;box-shadow:0 20px 50px rgba(0,0,0,.5)">
+            <div style="background:var(--surface2);padding:10px 14px;display:flex;align-items:center;border-bottom:1px solid var(--border)">
+              <div style="display:flex;gap:5px">
+                <div style="width:9px;height:9px;border-radius:50%;background:#ff5f57"></div>
+                <div style="width:9px;height:9px;border-radius:50%;background:#ffbd2e"></div>
+                <div style="width:9px;height:9px;border-radius:50%;background:#28c840"></div>
+              </div>
+              <span style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-left:auto">Consulta Cashback</span>
+            </div>
+            <div style="padding:22px">
+              <div style="font-size:16px;font-weight:600;margin-bottom:2px">Consultar Cashback</div>
+              <div style="font-size:11px;color:var(--muted);margin-bottom:16px">Digite o CPF para verificar saldo</div>
+              <div style="display:flex;gap:7px;margin-bottom:14px">
+                <input id="popCpf" type="text" placeholder="000.000.000-00" maxlength="14"
+                  style="flex:1;padding:11px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:var(--mono);font-size:14px;outline:none"
+                  oninput="maskCpf(this)" onkeydown="if(event.key==='Enter')popConsultar()">
+                <button onclick="popConsultar()" style="padding:11px 14px;background:var(--accent);color:#080810;border:none;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer">
+                  Consultar
+                </button>
+              </div>
+              <div id="popLoading" style="display:none;text-align:center;padding:16px;color:var(--muted);font-size:12px">
+                Consultando Almode...
+              </div>
+              <div id="popResult" style="display:none">
+                <div style="background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:10px;padding:18px;text-align:center">
+                  <div id="popNome" style="font-size:14px;font-weight:600"></div>
+                  <div id="popCpfLbl" style="font-size:10px;color:var(--muted);font-family:var(--mono);margin:2px 0 14px"></div>
+                  <div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em">Cashback Disponível</div>
+                  <div id="popValor" style="font-size:36px;font-weight:600;color:var(--accent);letter-spacing:-.04em;line-height:1.1"></div>
+                  <div style="display:flex;gap:7px;margin-top:14px">
+                    <button onclick="popNovo()" style="flex:1;padding:9px;background:var(--accent);color:#080810;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">✓ Confirmado</button>
+                    <button onclick="popNovo()" style="flex:1;padding:9px;background:var(--surface2);color:var(--muted);border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer">Nova Consulta</button>
+                  </div>
+                </div>
+              </div>
+              <div id="popEmpty" style="display:none;background:rgba(255,85,102,.06);border:1px solid rgba(255,85,102,.2);border-radius:10px;padding:18px;text-align:center">
+                <div style="font-size:24px;margin-bottom:6px">💸</div>
+                <div style="font-size:12px;color:var(--muted)">Nenhum cashback disponível</div>
+                <button onclick="popNovo()" style="margin-top:10px;padding:7px 18px;background:var(--surface2);color:var(--muted);border:1px solid var(--border);border-radius:7px;font-size:11px;cursor:pointer">Nova Consulta</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-box" style="flex:1">
+          <h3>Como funciona</h3>
+          <div class="step"><div class="step-n">→</div><div class="step-t">
+            <h4>Consulta em tempo real</h4>
+            <p>Primeiro busca no cache local (instantâneo). Se não encontrar, consulta a API Almode direto — campo <code>disponivelEmCashback</code>.</p>
+          </div></div>
+          <div class="step"><div class="step-n">→</div><div class="step-t">
+            <h4>Arquivo standalone</h4>
+            <p>O <code>popup-vendedor.html</code> abre direto no navegador do caixa. No app Electron, abre como janela separada que fica sempre na frente.</p>
+          </div></div>
+          <div class="step"><div class="step-n">→</div><div class="step-t">
+            <h4>Atalho F2</h4>
+            <p>No app desktop, pressione <code>F2</code> em qualquer tela para abrir o pop-up do vendedor rapidamente.</p>
+          </div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- API DOCS -->
+    <section class="section" id="section-api">
+      <div class="page-title">Endpoints Almode</div>
+      <div class="page-sub">Referência dos endpoints mapeados — base para o agente</div>
+
+      <div class="api-info">
+        <h4>Autenticação</h4>
+        <div class="api-row"><span class="method m-get">ALL</span><span class="api-path">Header: Authorization: Bearer {token}</span></div>
+        <div class="api-desc">Token do usuário administrador obrigatório em todas as requisições</div>
+      </div>
+
+      <div class="api-info">
+        <h4>Clientes</h4>
+        <div class="api-row"><span class="method m-get">GET</span><span class="api-path">/api/public/clientes?busca={cpf}</span></div>
+        <div class="api-desc">Cliente por CPF — retorna <code>disponivelEmCashback</code> e <code>disponivelEmCredito</code></div>
+        <div class="api-row"><span class="method m-get">GET</span><span class="api-path">/api/public/clientes/resumido-por-loja?cnpjLoja={cnpj}</span></div>
+        <div class="api-desc">Lista resumida de todos os clientes da loja (suporta <code>atualizadosApartirDe</code> para sync incremental)</div>
+        <div class="api-row"><span class="method m-get">GET</span><span class="api-path">/api/public/clientes/tipos</span></div>
+        <div class="api-desc">Lista tipos de clientes — usado para testar a conexão</div>
+      </div>
+
+      <div class="api-info" style="border-color:var(--accent-border)">
+        <h4>Cashback nativo — a mapear pelo agente</h4>
+        <div class="api-row"><span class="method m-get">?</span><span class="api-path">/api/public/cashback/...</span></div>
+        <div class="api-desc">O Almode tem seção Cashback nativa na API. O agente vai acessar a documentação e preencher os stubs em <code>almode.js</code></div>
+      </div>
+
+      <div class="info-box" style="margin-top:14px">
+        <h3>Próximos passos — integração do agente</h3>
+        <div class="step"><div class="step-n">1</div><div class="step-t">
+          <h4>Agente acessa documentação Almode</h4>
+          <p>Mapeia os endpoints da seção <code>Cashback</code> e <code>Vendas</code> com seus parâmetros e respostas</p>
+        </div></div>
+        <div class="step"><div class="step-n">2</div><div class="step-t">
+          <h4>Preenche stubs em <code>almode.js</code></h4>
+          <p>Implementa <code>lancarCashback()</code> e <code>resgatar()</code> com as chamadas reais</p>
+        </div></div>
+        <div class="step"><div class="step-n">3</div><div class="step-t">
+          <h4>Testa com credenciais reais</h4>
+          <p>Executa <code>testarConexao()</code> e valida o fluxo completo de consulta e lançamento</p>
+        </div></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import * as App from './src/js/app.js'
+  window.App = App
+  App.boot()
+
+  // Navegação
+  window.showSection = function(id, el) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'))
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'))
+    document.getElementById('section-' + id).classList.add('active')
+    el.classList.add('active')
+  }
+
+  // Pop-up inline demo
+  window.maskCpf = function(el) {
+    let v = el.value.replace(/\D/g,'')
+    if (v.length<=3) el.value=v
+    else if (v.length<=6) el.value=v.slice(0,3)+'.'+v.slice(3)
+    else if (v.length<=9) el.value=v.slice(0,3)+'.'+v.slice(3,6)+'.'+v.slice(6)
+    else el.value=v.slice(0,3)+'.'+v.slice(3,6)+'.'+v.slice(6,9)+'-'+v.slice(9,11)
+  }
+
+  window.popConsultar = async function() {
+    const cpf = document.getElementById('popCpf').value
+    hide('popResult'); hide('popEmpty')
+    document.getElementById('popLoading').style.display = 'block'
+    const r = await App.onConsultar(cpf)
+    document.getElementById('popLoading').style.display = 'none'
+    if (r.cliente) {
+      document.getElementById('popNome').textContent = r.cliente.nome
+      document.getElementById('popCpfLbl').textContent = cpf
+      document.getElementById('popValor').textContent = 'R$ ' + (r.cliente.cashback||0).toFixed(2).replace('.',',')
+      if ((r.cliente.cashback||0) > 0) show('popResult'); else show('popEmpty')
+    } else {
+      show('popEmpty')
+    }
+  }
+
+  window.popNovo = function() {
+    document.getElementById('popCpf').value = ''
+    hide('popResult'); hide('popEmpty')
+  }
+
+  function show(id) { document.getElementById(id).style.display = 'block' }
+  function hide(id) { document.getElementById(id).style.display = 'none' }
+</script>
+</body>
+</html>
