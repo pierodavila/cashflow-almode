@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>CashFlow — Clientes VIP Brindes</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080810;--s:#10101a;--s2:#18182a;--bd:#252538;--ac:#00e5a0;--gold:#f5c842;--tx:#e6e6f0;--mt:#666688;--fn:'IBM Plex Sans',sans-serif;--mo:'IBM Plex Mono',monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:var(--fn);min-height:100vh}
+body::before{content:'';position:fixed;top:-20vh;left:-10vw;width:70vw;height:70vh;background:radial-gradient(ellipse,rgba(245,200,66,.04) 0%,transparent 70%);pointer-events:none}
+
+header{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:1px solid var(--bd);background:rgba(8,8,16,.9);backdrop-filter:blur(10px);position:sticky;top:0;z-index:100}
+.logo{font-size:18px;font-weight:600;letter-spacing:-.04em}.logo span{color:var(--ac)}
+.logo-sub{font-size:10px;color:var(--mt);font-family:var(--mo)}
+.hdr-right{display:flex;gap:10px}
+.btn{padding:9px 16px;border-radius:9px;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;font-family:var(--fn);display:inline-flex;align-items:center;gap:7px;border:1px solid transparent;text-decoration:none}
+.btn-gold{background:var(--gold);color:#080810}
+.btn-gold:hover{filter:brightness(1.1)}
+.btn-ghost{background:var(--s2);color:var(--tx);border-color:var(--bd)}
+.btn-ghost:hover{border-color:var(--ac);color:var(--ac)}
+.btn-sm{padding:6px 12px;font-size:11px;border-radius:7px}
+
+main{padding:28px 32px;max-width:1200px;margin:0 auto}
+.page-title{font-size:26px;font-weight:600;letter-spacing:-.04em;margin-bottom:3px}
+.page-sub{color:var(--mt);font-size:13px;margin-bottom:24px}
+
+/* HERO STATS */
+.hero{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+.hero-card{background:var(--s);border:1px solid var(--bd);border-radius:12px;padding:18px;position:relative;overflow:hidden}
+.hero-card.gold{border-color:rgba(245,200,66,.3)}
+.hero-card.gold::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--gold)}
+.hero-lbl{font-family:var(--mo);font-size:10px;color:var(--mt);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
+.hero-val{font-size:22px;font-weight:600;letter-spacing:-.03em}
+.hero-val.gold{color:var(--gold)}
+.hero-val.green{color:var(--ac)}
+
+/* BRINDE CONFIG */
+.config-box{background:var(--s);border:1px solid rgba(245,200,66,.25);border-radius:12px;padding:22px;margin-bottom:24px}
+.config-box h3{font-size:14px;font-weight:500;color:var(--gold);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.config-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.cf-group label{font-family:var(--mo);font-size:10px;color:var(--mt);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em}
+.cf-group input{width:100%;padding:9px 11px;background:var(--s2);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-size:13px;font-family:var(--mo);outline:none;transition:border-color .15s}
+.cf-group input:focus{border-color:var(--gold)}
+.msg-area{width:100%;padding:10px 12px;background:var(--s2);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-size:13px;font-family:var(--fn);outline:none;resize:vertical;min-height:80px;line-height:1.5}
+.msg-area:focus{border-color:var(--gold)}
+
+/* TABELA */
+.table-card{background:var(--s);border:1px solid var(--bd);border-radius:12px;overflow:hidden}
+.table-top{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--bd)}
+.table-top h3{font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px}
+.table-actions{display:flex;gap:8px}
+table{width:100%;border-collapse:collapse}
+th{padding:9px 18px;text-align:left;font-family:var(--mo);font-size:10px;color:var(--mt);text-transform:uppercase;letter-spacing:.1em;border-bottom:1px solid var(--bd);background:rgba(255,255,255,.01)}
+td{padding:12px 18px;font-size:13px;border-bottom:1px solid rgba(37,37,56,.4)}
+tr:last-child td{border:none}
+tr:hover td{background:rgba(255,255,255,.015)}
+.mono{font-family:var(--mo);font-size:12px;color:var(--mt)}
+.val-gold{color:var(--gold);font-weight:600;font-family:var(--mo)}
+.val-green{color:var(--ac);font-weight:600;font-family:var(--mo)}
+.badge-brinde{display:inline-flex;align-items:center;gap:4px;background:rgba(245,200,66,.1);border:1px solid rgba(245,200,66,.25);color:var(--gold);font-size:10px;padding:2px 9px;border-radius:12px;font-family:var(--mo)}
+.badge-recebeu{background:rgba(0,229,160,.1);border-color:rgba(0,229,160,.25);color:var(--ac)}
+.check-col{width:40px;text-align:center}
+input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--gold)}
+
+/* CASHBACK 50% */
+.limit-box{background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.2);border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between}
+.limit-box p{font-size:13px;color:var(--mt)}
+.limit-box strong{color:var(--ac)}
+
+.toast{position:fixed;bottom:24px;right:24px;background:var(--s);border:1px solid var(--bd);border-radius:10px;padding:12px 18px;font-size:13px;z-index:9999;transform:translateY(80px);opacity:0;transition:all .25s cubic-bezier(.34,1.56,.64,1)}
+.toast.show{transform:none;opacity:1}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">Cash<span>Flow</span> <span style="font-size:13px;color:var(--gold);font-weight:400">— Brindes VIP</span></div>
+    <div class="logo-sub">clientes com compras acima de R$ 5.000</div>
+  </div>
+  <div class="hdr-right">
+    <a href="rfm.html" class="btn btn-ghost btn-sm">← RFM</a>
+    <button class="btn btn-ghost btn-sm" onclick="exportarExcel()">📊 Exportar Excel</button>
+    <button class="btn btn-gold btn-sm" onclick="exportarWhatsapp()">💬 Lista WhatsApp</button>
+  </div>
+</header>
+
+<main>
+  <div class="page-title">🎁 Clientes VIP — Programa de Brindes</div>
+  <div class="page-sub">Clientes que compraram acima de R$ 5.000 e merecem um presente especial</div>
+
+  <!-- STATS -->
+  <div class="hero">
+    <div class="hero-card gold">
+      <div class="hero-lbl">Clientes VIP</div>
+      <div class="hero-val gold" id="hTotal">—</div>
+    </div>
+    <div class="hero-card">
+      <div class="hero-lbl">Total Comprado</div>
+      <div class="hero-val" id="hCompras">—</div>
+    </div>
+    <div class="hero-card">
+      <div class="hero-lbl">Cashback Acumulado</div>
+      <div class="hero-val green" id="hCashback">—</div>
+    </div>
+    <div class="hero-card">
+      <div class="hero-lbl">Custo Brindes</div>
+      <div class="hero-val gold" id="hCusto">—</div>
+    </div>
+  </div>
+
+  <!-- CONFIG -->
+  <div class="config-box">
+    <h3>⚙ Configuração do Brinde</h3>
+    <div class="config-grid">
+      <div class="cf-group">
+        <label>Mínimo de compras para ganhar</label>
+        <input type="number" id="cfMin" value="5000" onchange="renderTabela()">
+      </div>
+      <div class="cf-group">
+        <label>Valor máximo do brinde (R$)</label>
+        <input type="number" id="cfValorBrinde" value="200">
+      </div>
+      <div class="cf-group">
+        <label>Nome do brinde</label>
+        <input type="text" id="cfNomeBrinde" value="Peça exclusiva da coleção">
+      </div>
+    </div>
+    <div class="cf-group" style="margin-top:14px">
+      <label>Mensagem WhatsApp (use {nome}, {loja}, {brinde})</label>
+      <textarea class="msg-area" id="cfMsg">Olá {nome}! 🎁 Temos uma surpresa especial para você! Como agradecimento pelas suas compras conosco, separamos um presente exclusivo: {brinde} — sem nenhum custo para você. Venha retirar na loja! ✨</textarea>
+    </div>
+  </div>
+
+  <!-- CASHBACK 50% INFO -->
+  <div class="limit-box">
+    <p>💡 Regra de cashback: cliente pode usar até <strong>50% do valor da compra</strong> em cashback. Ex: compra de R$ 300 → máximo R$ 150 de cashback usado.</p>
+    <button class="btn btn-ghost btn-sm" onclick="abrirPopupCaixa()">🔍 Abrir Pop-up Caixa</button>
+  </div>
+
+  <!-- TABELA -->
+  <div class="table-card">
+    <div class="table-top">
+      <h3>🏆 Clientes VIP <span id="countLabel" style="font-size:12px;color:var(--mt);font-weight:400"></span></h3>
+      <div class="table-actions">
+        <button class="btn btn-ghost btn-sm" onclick="marcarTodos()">Marcar todos como presenteados</button>
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th class="check-col">✓</th>
+          <th>Nome</th>
+          <th>CPF</th>
+          <th>Telefone</th>
+          <th>Total Comprado</th>
+          <th>Cashback Disponível</th>
+          <th>Brinde</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let clientes = []
+let presenteados = JSON.parse(localStorage.getItem('cf_presenteados') || '{}')
+
+// Boot
+;(function() {
+  const raw = localStorage.getItem('cf_clientes_v2')
+  if (!raw) { showToast('Sincronize primeiro!'); return }
+  clientes = JSON.parse(raw).clientes || []
+  renderTabela()
+})()
+
+function getMin() { return parseFloat(document.getElementById('cfMin').value) || 5000 }
+
+function renderTabela() {
+  const min = getMin()
+  const vip = clientes.filter(c => (c.totalCompras||0) >= min).sort((a,b)=>b.totalCompras-a.totalCompras)
+  
+  // Stats
+  const totalCompras = vip.reduce((s,c)=>s+(c.totalCompras||0),0)
+  const totalCashback = vip.reduce((s,c)=>s+(c.cashback||0),0)
+  const custo = vip.length * parseFloat(document.getElementById('cfValorBrinde').value||200)
+  
+  document.getElementById('hTotal').textContent = vip.length
+  document.getElementById('hCompras').textContent = 'R$ ' + fmt(totalCompras)
+  document.getElementById('hCashback').textContent = 'R$ ' + fmt(totalCashback)
+  document.getElementById('hCusto').textContent = 'R$ ' + fmt(custo)
+  document.getElementById('countLabel').textContent = '(' + vip.length + ' clientes)'
+
+  const tbody = document.getElementById('tbody')
+  tbody.innerHTML = vip.map(c => {
+    const recebeu = presenteados[c.cpf]
+    const limiteCashback = c.cashback || 0
+    return `<tr>
+      <td class="check-col"><input type="checkbox" ${recebeu?'checked':''} onchange="togglePresenteado('${c.cpf}', this.checked)" title="Marcar como presenteado"></td>
+      <td><strong>${esc(c.nome)}</strong></td>
+      <td class="mono">${fmtCpf(c.cpf)}</td>
+      <td class="mono">${esc(c.telefone||'—')}</td>
+      <td class="val-gold">R$ ${fmt(c.totalCompras||0)}</td>
+      <td class="val-green">R$ ${fmt(limiteCashback)}</td>
+      <td>${recebeu ? '<span class="badge-brinde badge-recebeu">✓ Presenteado</span>' : '<span class="badge-brinde">🎁 Pendente</span>'}</td>
+    </tr>`
+  }).join('')
+}
+
+function togglePresenteado(cpf, val) {
+  if (val) presenteados[cpf] = new Date().toISOString()
+  else delete presenteados[cpf]
+  localStorage.setItem('cf_presenteados', JSON.stringify(presenteados))
+  renderTabela()
+  showToast(val ? '🎁 Marcado como presenteado!' : 'Desmarcado')
+}
+
+function marcarTodos() {
+  const min = getMin()
+  const vip = clientes.filter(c => (c.totalCompras||0) >= min)
+  vip.forEach(c => { presenteados[c.cpf] = new Date().toISOString() })
+  localStorage.setItem('cf_presenteados', JSON.stringify(presenteados))
+  renderTabela()
+  showToast('✅ Todos marcados como presenteados!')
+}
+
+function exportarExcel() {
+  const min = getMin()
+  const vip = clientes.filter(c => (c.totalCompras||0) >= min).sort((a,b)=>b.totalCompras-a.totalCompras)
+  const nomeBrinde = document.getElementById('cfNomeBrinde').value
+  const rows = [['Nome','CPF','Telefone','Total Comprado','Cashback Disponível','Limite 50% (máx. uso cashback)','Brinde','Status']]
+  for (const c of vip) {
+    rows.push([
+      c.nome, fmtCpf(c.cpf), c.telefone||'',
+      (c.totalCompras||0).toFixed(2),
+      (c.cashback||0).toFixed(2),
+      ((c.cashback||0) * 0.5).toFixed(2),
+      nomeBrinde,
+      presenteados[c.cpf] ? 'Presenteado' : 'Pendente'
+    ])
+  }
+  baixarCSV(rows, 'clientes-vip-brindes.csv')
+  showToast('✅ Excel exportado!')
+}
+
+function exportarWhatsapp() {
+  const min = getMin()
+  const vip = clientes.filter(c => (c.totalCompras||0) >= min && !presenteados[c.cpf]).sort((a,b)=>b.totalCompras-a.totalCompras)
+  const template = document.getElementById('cfMsg').value
+  const nomeBrinde = document.getElementById('cfNomeBrinde').value
+  const loja = 'nossa loja'
+  const rows = [['Nome','Telefone','CPF','Mensagem']]
+  for (const c of vip) {
+    const msg = template.replace('{nome}', c.nome.split(' ')[0]).replace('{loja}', loja).replace('{brinde}', nomeBrinde)
+    rows.push([c.nome, c.telefone||'', fmtCpf(c.cpf), msg])
+  }
+  baixarCSV(rows, 'whatsapp-brindes-vip.csv')
+  showToast('✅ ' + vip.length + ' mensagens exportadas!')
+}
+
+function abrirPopupCaixa() {
+  window.open('popup-vendedor.html', 'popup', 'width=440,height=580,resizable=no')
+}
+
+function baixarCSV(rows, nome) {
+  const bom = '\uFEFF'
+  const csv = bom + rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(';')).join('\n')
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'}))
+  a.download = nome; a.click()
+}
+
+function fmt(n) { return Number(n).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) }
+function fmtCpf(v) { const d=(v||'').replace(/\D/g,''); return d.length===11?d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4'):v }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;') }
+function showToast(msg) {
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show')
+  setTimeout(()=>t.classList.remove('show'),3200)
+}
+</script>
+</body>
+</html>
