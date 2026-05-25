@@ -2,130 +2,239 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Consulta Cashback</title>
+<title>CashFlow — Caixa</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root { --bg:#080810; --s:#10101a; --s2:#18182a; --bd:#252538; --ac:#4fffb0; --ac-dim:rgba(79,255,176,.12); --ac-bd:rgba(79,255,176,.25); --dk:#ff5566; --tx:#e6e6f0; --mt:#666688; --fn:'IBM Plex Sans',sans-serif; --mo:'IBM Plex Mono',monospace; }
-  * { box-sizing:border-box; margin:0; padding:0; }
-  body { background:var(--bg); color:var(--tx); font-family:var(--fn); min-height:100vh; display:flex; align-items:center; justify-content:center; }
-  body::before { content:''; position:fixed; inset:0; background:radial-gradient(ellipse at 50% 30%, rgba(79,255,176,.05) 0%,transparent 65%); pointer-events:none; }
+:root{--bg:#080810;--s:#10101a;--s2:#18182a;--bd:#252538;--ac:#4fffb0;--ac2:rgba(79,255,176,.12);--ac3:rgba(79,255,176,.25);--dk:#ff5566;--tx:#e6e6f0;--mt:#666688;--fn:'IBM Plex Sans',sans-serif;--mo:'IBM Plex Mono',monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:var(--fn);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(79,255,176,.05) 0%,transparent 65%);pointer-events:none}
 
-  .card { background:var(--s); border:1px solid var(--bd); border-radius:16px; padding:30px 26px; width:380px; box-shadow:0 28px 70px rgba(0,0,0,.55); position:relative; z-index:1; animation:up .4s cubic-bezier(.34,1.56,.64,1); }
-  @keyframes up { from{opacity:0;transform:translateY(24px) scale(.97)} to{opacity:1;transform:none} }
+.card{background:var(--s);border:1px solid var(--bd);border-radius:16px;padding:26px;width:400px;box-shadow:0 28px 70px rgba(0,0,0,.55);position:relative;z-index:1;animation:up .4s cubic-bezier(.34,1.56,.64,1)}
+@keyframes up{from{opacity:0;transform:translateY(24px) scale(.97)}to{opacity:1;transform:none}}
 
-  .logo { font-size:16px; font-weight:600; letter-spacing:-.04em; text-align:center; margin-bottom:2px; }
-  .logo span { color:var(--ac); }
-  .logo-sub { font-size:10px; color:var(--mt); text-align:center; font-family:var(--mo); margin-bottom:22px; }
+.logo{font-size:16px;font-weight:600;letter-spacing:-.04em;text-align:center;margin-bottom:2px}
+.logo span{color:var(--ac)}
+.logo-sub{font-size:10px;color:var(--mt);text-align:center;font-family:var(--mo);margin-bottom:20px}
 
-  .lbl { font-family:var(--mo); font-size:10px; color:var(--mt); text-transform:uppercase; letter-spacing:.1em; margin-bottom:6px; }
-  .row { display:flex; gap:8px; margin-bottom:16px; }
-  .cpf { flex:1; padding:12px 13px; background:var(--s2); border:1px solid var(--bd); border-radius:10px; color:var(--tx); font-size:16px; font-family:var(--mo); outline:none; transition:border-color .15s, box-shadow .15s; letter-spacing:.04em; }
-  .cpf:focus { border-color:var(--ac); box-shadow:0 0 0 3px rgba(79,255,176,.1); }
-  .go { padding:12px 15px; background:var(--ac); color:#080810; border:none; border-radius:10px; font-size:12px; font-weight:700; cursor:pointer; font-family:var(--fn); transition:all .15s; white-space:nowrap; }
-  .go:hover { filter:brightness(1.1); transform:scale(1.02); }
+.lbl{font-family:var(--mo);font-size:10px;color:var(--mt);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
+.inp{width:100%;padding:11px 13px;background:var(--s2);border:1px solid var(--bd);border-radius:10px;color:var(--tx);font-size:15px;font-family:var(--mo);outline:none;transition:border-color .15s,box-shadow .15s;margin-bottom:12px}
+.inp:focus{border-color:var(--ac);box-shadow:0 0 0 3px rgba(79,255,176,.1)}
+.row{display:flex;gap:8px;margin-bottom:12px}
+.row .inp{margin-bottom:0}
+.go{padding:11px 15px;background:var(--ac);color:#080810;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--fn);transition:all .15s;white-space:nowrap}
+.go:hover{filter:brightness(1.1)}
 
-  .loading { display:none; text-align:center; padding:20px; color:var(--mt); font-size:12px; }
-  .loading.on { display:block; }
+.info-bar{font-size:11px;color:var(--mt);font-family:var(--mo);margin-bottom:14px;display:none;padding:7px 10px;background:var(--s2);border-radius:7px;display:none}
+.info-bar span{color:var(--ac)}
 
-  .result { display:none; animation:pop .3s cubic-bezier(.34,1.56,.64,1); }
-  .result.on { display:block; }
-  @keyframes pop { from{opacity:0;transform:scale(.9)} to{opacity:1;transform:none} }
-  .res-card { background:var(--ac-dim); border:1px solid var(--ac-bd); border-radius:12px; padding:20px; text-align:center; }
-  .res-name { font-size:14px; font-weight:600; margin-bottom:1px; }
-  .res-cpf { font-size:10px; color:var(--mt); font-family:var(--mo); margin-bottom:14px; }
-  .res-lbl { font-size:10px; color:var(--mt); font-family:var(--mo); text-transform:uppercase; letter-spacing:.1em; }
-  .res-val { font-size:36px; font-weight:700; color:var(--ac); letter-spacing:-.04em; line-height:1.1; animation:cnt .4s ease; }
-  @keyframes cnt { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
-  .res-btns { display:flex; gap:7px; margin-top:14px; }
-  .res-ok { flex:1; padding:10px; background:var(--ac); color:#080810; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:var(--fn); transition:all .15s; }
-  .res-ok:hover { filter:brightness(1.1); }
-  .res-new { flex:1; padding:10px; background:var(--s2); color:var(--mt); border:1px solid var(--bd); border-radius:8px; font-size:12px; cursor:pointer; font-family:var(--fn); transition:all .15s; }
-  .res-new:hover { color:var(--tx); }
+.loading{display:none;text-align:center;padding:18px;color:var(--mt);font-size:12px}
+.loading.on{display:block}
 
-  .empty { display:none; background:rgba(255,85,102,.06); border:1px solid rgba(255,85,102,.2); border-radius:12px; padding:20px; text-align:center; animation:pop .3s cubic-bezier(.34,1.56,.64,1); }
-  .empty.on { display:block; }
-  .empty-ico { font-size:28px; margin-bottom:6px; }
-  .empty p { font-size:12px; color:var(--mt); }
-  .empty-new { margin-top:10px; padding:8px 20px; background:var(--s2); color:var(--mt); border:1px solid var(--bd); border-radius:8px; font-size:11px; cursor:pointer; font-family:var(--fn); }
+/* RESULTADO */
+.result{display:none;animation:pop .3s cubic-bezier(.34,1.56,.64,1)}
+.result.on{display:block}
+@keyframes pop{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:none}}
+.res-card{background:var(--ac2);border:1px solid var(--ac3);border-radius:12px;padding:18px;text-align:center}
+.res-name{font-size:15px;font-weight:600;margin-bottom:2px}
+.res-cpf{font-size:10px;color:var(--mt);font-family:var(--mo);margin-bottom:4px}
+.res-loja{font-size:10px;color:var(--ac);font-family:var(--mo);margin-bottom:14px}
+.res-lbl{font-size:10px;color:var(--mt);font-family:var(--mo);text-transform:uppercase;letter-spacing:.1em}
+.res-val{font-size:36px;font-weight:700;color:var(--ac);letter-spacing:-.04em;line-height:1.1;margin-bottom:4px}
+.res-limite{font-size:11px;color:var(--mt);font-family:var(--mo);margin-bottom:14px}
+.res-limite span{color:#ffb340}
 
-  .cfg-hint { text-align:center; margin-top:16px; font-size:10px; color:var(--mt); font-family:var(--mo); }
-  .cfg-hint a { color:var(--ac); cursor:pointer; }
-  .cfg-panel { display:none; margin-top:12px; background:var(--s2); border:1px solid var(--bd); border-radius:10px; padding:14px; }
-  .cfg-panel.on { display:block; }
-  .cf-lbl { font-family:var(--mo); font-size:10px; color:var(--mt); margin-bottom:3px; margin-top:8px; }
-  .cf-lbl:first-child { margin-top:0; }
-  .cf-in { width:100%; padding:7px 9px; background:var(--bg); border:1px solid var(--bd); border-radius:7px; color:var(--tx); font-size:11px; font-family:var(--mo); outline:none; transition:border-color .15s; }
-  .cf-in:focus { border-color:var(--ac); }
-  .cf-save { width:100%; margin-top:10px; padding:8px; background:var(--ac-dim); border:1px solid var(--ac-bd); border-radius:7px; color:var(--ac); font-size:11px; cursor:pointer; font-family:var(--fn); font-weight:500; }
+/* CAMPO DE USO */
+.usar-box{background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:12px;text-align:left}
+.usar-box .lbl{margin-bottom:6px}
+.usar-row{display:flex;gap:8px;align-items:center}
+.usar-inp{flex:1;padding:9px 11px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-size:16px;font-family:var(--mo);font-weight:600;outline:none;transition:border-color .15s}
+.usar-inp:focus{border-color:var(--ac)}
+.usar-max{padding:9px 12px;background:var(--ac2);border:1px solid var(--ac3);border-radius:8px;font-size:11px;color:var(--ac);cursor:pointer;white-space:nowrap;font-family:var(--fn)}
+.usar-max:hover{background:var(--ac3)}
 
-  .toast { position:fixed; bottom:18px; left:50%; transform:translateX(-50%) translateY(70px); background:var(--ac); color:#080810; padding:9px 20px; border-radius:25px; font-weight:600; font-size:12px; transition:transform .25s cubic-bezier(.34,1.56,.64,1); z-index:9999; white-space:nowrap; }
-  .toast.on { transform:translateX(-50%) translateY(0); }
+.res-btns{display:flex;gap:7px;margin-top:4px}
+.btn-resgatar{flex:2;padding:11px;background:var(--ac);color:#080810;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--fn);transition:all .15s}
+.btn-resgatar:hover{filter:brightness(1.1)}
+.btn-resgatar:disabled{opacity:.4;cursor:not-allowed}
+.btn-novo{flex:1;padding:11px;background:var(--s2);color:var(--mt);border:1px solid var(--bd);border-radius:9px;font-size:12px;cursor:pointer;font-family:var(--fn);transition:all .15s}
+.btn-novo:hover{color:var(--tx)}
+
+/* CONFIRMAÇÃO */
+.confirm-overlay{display:none;position:fixed;inset:0;background:rgba(8,8,16,.85);z-index:50;align-items:center;justify-content:center;animation:fadein .2s ease}
+.confirm-overlay.on{display:flex}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.confirm-card{background:var(--s);border:1px solid var(--bd);border-radius:14px;padding:24px;width:320px;text-align:center;animation:up .3s cubic-bezier(.34,1.56,.64,1)}
+.confirm-card h3{font-size:15px;font-weight:600;margin-bottom:6px}
+.confirm-card p{font-size:13px;color:var(--mt);line-height:1.5;margin-bottom:18px}
+.confirm-val{font-size:32px;font-weight:700;color:var(--ac);margin-bottom:4px}
+.confirm-sub{font-size:11px;color:var(--mt);font-family:var(--mo);margin-bottom:18px}
+.confirm-btns{display:flex;gap:8px}
+.confirm-ok{flex:1;padding:12px;background:var(--ac);color:#080810;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--fn)}
+.confirm-ok:hover{filter:brightness(1.1)}
+.confirm-cancel{flex:1;padding:12px;background:var(--s2);color:var(--mt);border:1px solid var(--bd);border-radius:9px;font-size:13px;cursor:pointer;font-family:var(--fn)}
+
+/* SUCESSO */
+.success-card{display:none;background:rgba(79,255,176,.07);border:1px solid var(--ac3);border-radius:12px;padding:20px;text-align:center;animation:pop .3s cubic-bezier(.34,1.56,.64,1)}
+.success-card.on{display:block}
+.success-icon{font-size:36px;margin-bottom:8px}
+.success-title{font-size:16px;font-weight:600;color:var(--ac);margin-bottom:4px}
+.success-sub{font-size:12px;color:var(--mt);margin-bottom:16px;line-height:1.5}
+.saldo-novo{font-size:24px;font-weight:700;color:var(--ac);margin-bottom:4px}
+.saldo-lbl{font-size:10px;color:var(--mt);font-family:var(--mo);margin-bottom:16px}
+
+/* HISTÓRICO */
+.hist-section{margin-top:16px;border-top:1px solid var(--bd);padding-top:14px}
+.hist-title{font-size:11px;font-family:var(--mo);color:var(--mt);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.hist-list{display:flex;flex-direction:column;gap:6px;max-height:180px;overflow-y:auto}
+.hist-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--s2);border-radius:8px;font-size:12px}
+.hist-item-left{display:flex;flex-direction:column;gap:2px}
+.hist-nome{font-weight:500;color:var(--tx)}
+.hist-meta{font-size:10px;color:var(--mt);font-family:var(--mo)}
+.hist-val{font-family:var(--mo);font-weight:600;color:var(--ac);font-size:13px;white-space:nowrap}
+.hist-empty{text-align:center;padding:16px;color:var(--mt);font-size:12px}
+
+.empty{display:none;background:rgba(255,85,102,.06);border:1px solid rgba(255,85,102,.2);border-radius:12px;padding:20px;text-align:center;animation:pop .3s cubic-bezier(.34,1.56,.64,1)}
+.empty.on{display:block}
+.empty-ico{font-size:28px;margin-bottom:6px}
+.empty p{font-size:12px;color:var(--mt)}
+.empty-new{margin-top:10px;padding:8px 20px;background:var(--s2);color:var(--mt);border:1px solid var(--bd);border-radius:8px;font-size:11px;cursor:pointer;font-family:var(--fn)}
+
+.cfg-hint{text-align:center;margin-top:14px;font-size:10px;color:var(--mt);font-family:var(--mo)}
+.cfg-hint a{color:var(--ac);cursor:pointer}
+.cfg-panel{display:none;margin-top:10px;background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:14px}
+.cfg-panel.on{display:block}
+.cf-lbl{font-family:var(--mo);font-size:10px;color:var(--mt);margin-bottom:3px;margin-top:8px}
+.cf-lbl:first-child{margin-top:0}
+.cf-in{width:100%;padding:7px 9px;background:var(--bg);border:1px solid var(--bd);border-radius:7px;color:var(--tx);font-size:11px;font-family:var(--mo);outline:none}
+.cf-in:focus{border-color:var(--ac)}
+.cf-save{width:100%;margin-top:10px;padding:8px;background:var(--ac2);border:1px solid var(--ac3);border-radius:7px;color:var(--ac);font-size:11px;cursor:pointer;font-family:var(--fn);font-weight:500}
+
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--ac);color:#080810;padding:9px 20px;border-radius:25px;font-weight:600;font-size:12px;transition:transform .25s cubic-bezier(.34,1.56,.64,1);z-index:9999;white-space:nowrap}
+.toast.on{transform:translateX(-50%) translateY(0)}
 </style>
 </head>
 <body>
 <div class="card">
   <div class="logo">Cash<span>Flow</span></div>
-  <div class="logo-sub">Ponto de Venda · Almode API</div>
+  <div class="logo-sub">Ponto de Venda · Registro de Resgates</div>
 
+  <!-- INPUTS -->
   <div class="lbl">Valor da Compra (R$)</div>
-  <input type="number" id="valorCompra" placeholder="0,00" step="0.01" min="0"
-    style="width:100%;padding:11px 13px;background:var(--s2);border:1px solid var(--bd);border-radius:10px;color:var(--tx);font-size:16px;font-family:var(--mo);outline:none;margin-bottom:12px;transition:border-color .15s"
-    oninput="calcLimite()">
-  <div id="limiteInfo" style="font-size:11px;color:var(--mt);font-family:var(--mo);margin-bottom:14px;display:none">
-    Limite de uso: <span id="limiteVal" style="color:var(--ac)">R$ 0,00</span>
+  <input class="inp" type="number" id="valorCompra" placeholder="0,00" step="0.01" min="0" oninput="calcLimite()">
+
+  <div class="info-bar" id="limiteInfo">
+    Limite máx. de cashback: <span id="limiteVal">R$ 0,00</span>
   </div>
+
   <div class="lbl">CPF do Cliente</div>
   <div class="row">
-    <input class="cpf" id="cpf" type="text" placeholder="000.000.000-00" maxlength="14"
+    <input class="inp" id="cpf" type="text" placeholder="000.000.000-00" maxlength="14"
       oninput="mask(this)" onkeydown="if(event.key==='Enter')buscar()" autofocus>
     <button class="go" onclick="buscar()">Consultar</button>
   </div>
 
-  <div class="loading" id="loading">Consultando Almode...</div>
+  <div class="loading" id="loading">Consultando...</div>
 
+  <!-- RESULTADO -->
   <div class="result" id="result">
     <div class="res-card">
       <div class="res-name" id="rNome"></div>
       <div class="res-cpf" id="rCpf"></div>
-      <div class="res-lbl">Cashback Disponível (máx. 50% da compra)</div>
+      <div class="res-loja" id="rLoja"></div>
+      <div class="res-lbl">Cashback disponível</div>
       <div class="res-val" id="rVal"></div>
-      <div class="res-btns">
-        <button class="res-ok" onclick="novo()">✓ Confirmado</button>
-        <button class="res-new" onclick="novo()">Nova Consulta</button>
+      <div class="res-limite" id="rLimite"></div>
+    </div>
+
+    <!-- CAMPO DE USO -->
+    <div class="usar-box">
+      <div class="lbl">Valor a resgatar (R$)</div>
+      <div class="usar-row">
+        <input class="usar-inp" type="number" id="valorUsar" placeholder="0,00" step="0.01" min="0" oninput="validarUso()">
+        <div class="usar-max" onclick="usarMaximo()">Usar máximo</div>
       </div>
+      <div id="usarErro" style="font-size:11px;color:#ff5566;margin-top:5px;display:none"></div>
+    </div>
+
+    <div class="res-btns">
+      <button class="btn-resgatar" id="btnResgatar" onclick="confirmarResgate()">💰 Registrar Resgate</button>
+      <button class="btn-novo" onclick="novo()">Nova Consulta</button>
     </div>
   </div>
 
+  <!-- SUCESSO -->
+  <div class="success-card" id="success">
+    <div class="success-icon">✅</div>
+    <div class="success-title">Resgate registrado!</div>
+    <div class="success-sub" id="successSub"></div>
+    <div class="saldo-novo" id="saldoNovo"></div>
+    <div class="saldo-lbl">Novo saldo do cliente</div>
+    <button class="btn-novo" style="width:100%;margin-top:4px" onclick="novo()">Nova Consulta</button>
+  </div>
+
+  <!-- SEM CASHBACK -->
   <div class="empty" id="empty">
     <div class="empty-ico">💸</div>
     <p>Nenhum cashback disponível para este CPF</p>
     <button class="empty-new" onclick="novo()">Nova Consulta</button>
   </div>
 
-  <div class="cfg-hint"><a onclick="toggleCfg()">⚙ configurar API</a></div>
+  <!-- HISTÓRICO DO DIA -->
+  <div class="hist-section">
+    <div class="hist-title">
+      <span>Resgates de hoje</span>
+      <span id="histTotal" style="color:var(--ac)"></span>
+    </div>
+    <div class="hist-list" id="histList"></div>
+  </div>
+
+  <div class="cfg-hint"><a onclick="toggleCfg()">⚙ configurar</a></div>
   <div class="cfg-panel" id="cfgPanel">
     <div class="cf-lbl">Domínio Almode</div>
     <input class="cf-in" id="cfDomain" placeholder="suaempresa.almode.dev">
     <div class="cf-lbl">Token Bearer</div>
     <input class="cf-in" type="password" id="cfToken" placeholder="token-admin">
+    <div class="cf-lbl">Loja (para o registro)</div>
+    <input class="cf-in" id="cfLoja" placeholder="FORUM OUTLET">
+    <div class="cf-lbl">Vendedor</div>
+    <input class="cf-in" id="cfVendedor" placeholder="Nome do vendedor">
     <button class="cf-save" onclick="saveCfg()">Salvar</button>
+  </div>
+</div>
+
+<!-- CONFIRMAÇÃO -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-card">
+    <h3>Confirmar resgate</h3>
+    <p id="confirmDesc"></p>
+    <div class="confirm-val" id="confirmVal"></div>
+    <div class="confirm-sub" id="confirmSub"></div>
+    <div class="confirm-btns">
+      <button class="confirm-ok" onclick="executarResgate()">✓ Confirmar</button>
+      <button class="confirm-cancel" onclick="fecharConfirm()">Cancelar</button>
+    </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// Configuração
 let cfg = JSON.parse(localStorage.getItem('popup_cfg_v2') || '{}')
-if (cfg.domain) document.getElementById('cfDomain').value = cfg.domain
-if (cfg.token) document.getElementById('cfToken').value = cfg.token
+let clienteAtual = null
+let saldoAtual = 0
+let limiteAtual = 0
 
-// Cache de clientes do painel admin (shared localStorage)
-function getCacheClientes() {
-  try { const r = localStorage.getItem('cf_clientes_v2'); return r ? JSON.parse(r).clientes || [] : [] }
-  catch { return [] }
-}
+// Boot
+;(function() {
+  if (cfg.domain) document.getElementById('cfDomain').value = cfg.domain
+  if (cfg.token) document.getElementById('cfToken').value = cfg.token
+  if (cfg.loja) document.getElementById('cfLoja').value = cfg.loja
+  if (cfg.vendedor) document.getElementById('cfVendedor').value = cfg.vendedor
+  renderHistorico()
+})()
 
+// Máscara CPF
 function mask(el) {
   let v = el.value.replace(/\D/g,'')
   if (v.length<=3) el.value=v
@@ -134,90 +243,263 @@ function mask(el) {
   else el.value=v.slice(0,3)+'.'+v.slice(3,6)+'.'+v.slice(6,9)+'-'+v.slice(9,11)
 }
 
+function calcLimite() {
+  const v = parseFloat(document.getElementById('valorCompra').value) || 0
+  limiteAtual = v * 0.5
+  const bar = document.getElementById('limiteInfo')
+  bar.style.display = v > 0 ? 'block' : 'none'
+  document.getElementById('limiteVal').textContent = 'R$ ' + fmt(limiteAtual)
+}
+
 async function buscar() {
-  const cpf = document.getElementById('cpf').value.replace(/\D/g,'')
-  if (cpf.length < 11) { showToast('CPF deve ter 11 dígitos'); return }
-  hide('result'); hide('empty')
-  document.getElementById('loading').classList.add('on')
+  const cpfRaw = document.getElementById('cpf').value.replace(/\D/g,'')
+  if (cpfRaw.length < 11) { showToast('CPF deve ter 11 dígitos'); return }
+  hide('result'); hide('empty'); hide('success')
+  show('loading')
 
   try {
-    // 1. Tenta cache local (instantâneo)
-    const cache = getCacheClientes()
-    const local = cache.find(c => c.cpf.replace(/\D/g,'') === cpf)
+    // 1. Cache local
+    const cache = getCache()
+    const local = cache.find(c => (c.cpf||'').replace(/\D/g,'') === cpfRaw)
 
+    hide('loading')
     if (local) {
-      document.getElementById('loading').classList.remove('on')
-      mostrar(local.nome, local.cpf, local.cashback || 0)
+      clienteAtual = local
+      saldoAtual = local.cashback || 0
+      mostrar(local.nome, local.cpf, saldoAtual, local.loja)
       return
     }
 
-    // 2. Consulta API Almode em tempo real
+    // 2. API Almode
     if (!cfg.domain || !cfg.token) throw new Error('Configure domínio e token')
-    const res = await fetch(`https://${cfg.domain}/api/public/clientes?busca=${cpf}`, {
+    const res = await fetch(`https://${cfg.domain}/api/public/clientes?busca=${cpfRaw}`, {
       headers: { 'Authorization': `Bearer ${cfg.token}` }
     })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const data = await res.json()
     const c = (data.content || [])[0] || data[0]
-
-    document.getElementById('loading').classList.remove('on')
+    hide('loading')
     if (c) {
-      mostrar(c.razaoSocialOuNome, c.cnpjOuCpf, parseFloat(c.disponivelEmCashback) || 0)
+      saldoAtual = parseFloat(c.disponivelEmCashback) || 0
+      clienteAtual = { cpf: cpfRaw, nome: c.razaoSocialOuNome, cashback: saldoAtual, loja: cfg.loja || '—' }
+      mostrar(c.razaoSocialOuNome, cpfRaw, saldoAtual, cfg.loja || '—')
     } else {
       show('empty')
     }
-  } catch (e) {
-    document.getElementById('loading').classList.remove('on')
+  } catch(e) {
+    hide('loading')
     show('empty')
     showToast('Erro: ' + e.message)
   }
 }
 
-function calcLimite() {
-  const v = parseFloat(document.getElementById('valorCompra').value) || 0
-  const limite = v * 0.5
-  document.getElementById('limiteInfo').style.display = v > 0 ? 'block' : 'none'
-  document.getElementById('limiteVal').textContent = 'R$ ' + limite.toFixed(2).replace('.',',')
-}
-
-function mostrar(nome, cpf, valor) {
+function mostrar(nome, cpf, saldo, loja) {
   const valorCompra = parseFloat(document.getElementById('valorCompra').value) || 0
-  const limite50 = valorCompra * 0.5
-  // Aplica limite de 50% se valor da compra foi informado
-  if (valorCompra > 0 && valor > limite50) valor = limite50
+  limiteAtual = valorCompra > 0 ? valorCompra * 0.5 : saldo
+  const maximo = Math.min(saldo, limiteAtual)
+
   document.getElementById('rNome').textContent = nome
   document.getElementById('rCpf').textContent = fmtCpf(cpf)
-  document.getElementById('rVal').textContent = 'R$ ' + valor.toFixed(2).replace('.',',')
-  if (valor > 0) show('result'); else show('empty')
+  document.getElementById('rLoja').textContent = loja || ''
+
+  document.getElementById('rVal').textContent = 'R$ ' + fmt(saldo)
+
+  const limMsg = valorCompra > 0 && saldo > limiteAtual
+    ? `Limite: 50% da compra = R$ ${fmt(limiteAtual)} (saldo: R$ ${fmt(saldo)})`
+    : ''
+  const limEl = document.getElementById('rLimite')
+  limEl.textContent = limMsg
+  limEl.style.display = limMsg ? 'block' : 'none'
+
+  // Preenche campo com o máximo disponível
+  document.getElementById('valorUsar').value = maximo > 0 ? maximo.toFixed(2) : ''
+  document.getElementById('btnResgatar').disabled = maximo <= 0
+
+  if (saldo > 0 || maximo > 0) show('result')
+  else show('empty')
+}
+
+function usarMaximo() {
+  const valorCompra = parseFloat(document.getElementById('valorCompra').value) || 0
+  const maximo = valorCompra > 0 ? Math.min(saldoAtual, valorCompra * 0.5) : saldoAtual
+  document.getElementById('valorUsar').value = maximo.toFixed(2)
+  validarUso()
+}
+
+function validarUso() {
+  const uso = parseFloat(document.getElementById('valorUsar').value) || 0
+  const valorCompra = parseFloat(document.getElementById('valorCompra').value) || 0
+  const limite = valorCompra > 0 ? Math.min(saldoAtual, valorCompra * 0.5) : saldoAtual
+  const erroEl = document.getElementById('usarErro')
+  const btn = document.getElementById('btnResgatar')
+
+  if (uso <= 0) {
+    erroEl.style.display = 'none'
+    btn.disabled = true
+    return false
+  }
+  if (uso > saldoAtual) {
+    erroEl.textContent = `Valor maior que o saldo disponível (R$ ${fmt(saldoAtual)})`
+    erroEl.style.display = 'block'
+    btn.disabled = true
+    return false
+  }
+  if (valorCompra > 0 && uso > valorCompra * 0.5) {
+    erroEl.textContent = `Máximo permitido: 50% da compra = R$ ${fmt(valorCompra * 0.5)}`
+    erroEl.style.display = 'block'
+    btn.disabled = true
+    return false
+  }
+  erroEl.style.display = 'none'
+  btn.disabled = false
+  return true
+}
+
+function confirmarResgate() {
+  if (!validarUso()) return
+  const uso = parseFloat(document.getElementById('valorUsar').value)
+  const valorCompra = parseFloat(document.getElementById('valorCompra').value) || 0
+  const novoSaldo = saldoAtual - uso
+
+  document.getElementById('confirmDesc').textContent =
+    `${clienteAtual?.nome || ''} · Compra: ${valorCompra > 0 ? 'R$ '+fmt(valorCompra) : 'não informada'}`
+  document.getElementById('confirmVal').textContent = '- R$ ' + fmt(uso)
+  document.getElementById('confirmSub').textContent =
+    `Saldo atual: R$ ${fmt(saldoAtual)} → Novo saldo: R$ ${fmt(novoSaldo)}`
+
+  show('confirmOverlay')
+}
+
+function fecharConfirm() { hide('confirmOverlay') }
+
+function executarResgate() {
+  hide('confirmOverlay')
+  const uso = parseFloat(document.getElementById('valorUsar').value)
+  const valorCompra = parseFloat(document.getElementById('valorCompra').value) || 0
+  const novoSaldo = Math.max(0, saldoAtual - uso)
+
+  // Registra o resgate no histórico
+  const resgate = {
+    id: Date.now(),
+    cpf: clienteAtual?.cpf || '',
+    nome: clienteAtual?.nome || '—',
+    loja: cfg.loja || clienteAtual?.loja || '—',
+    vendedor: cfg.vendedor || '—',
+    valorResgatado: uso,
+    saldoAntes: saldoAtual,
+    saldoDepois: novoSaldo,
+    valorCompra,
+    data: new Date().toISOString()
+  }
+
+  salvarResgate(resgate)
+
+  // Atualiza saldo no cache local
+  atualizarSaldoCache(clienteAtual?.cpf, uso)
+
+  // Mostra sucesso
+  hide('result')
+  document.getElementById('successSub').textContent =
+    `R$ ${fmt(uso)} resgatados por ${clienteAtual?.nome?.split(' ')[0] || 'cliente'} na ${cfg.loja || 'loja'}`
+  document.getElementById('saldoNovo').textContent = 'R$ ' + fmt(novoSaldo)
+  show('success')
+
+  renderHistorico()
+  showToast('✅ Resgate registrado!')
+}
+
+// Atualiza saldo no localStorage compartilhado com o painel
+function atualizarSaldoCache(cpf, valorUsado) {
+  try {
+    const raw = localStorage.getItem('cf_clientes_v2')
+    if (!raw) return
+    const data = JSON.parse(raw)
+    const lista = data.clientes || []
+    const cpfLimpo = (cpf || '').replace(/\D/g,'')
+    const idx = lista.findIndex(c => (c.cpf||'').replace(/\D/g,'') === cpfLimpo)
+    if (idx >= 0) {
+      lista[idx].cashback = Math.max(0, (lista[idx].cashback || 0) - valorUsado)
+      lista[idx].totalResgatado = (lista[idx].totalResgatado || 0) + valorUsado
+      data.clientes = lista
+      localStorage.setItem('cf_clientes_v2', JSON.stringify(data))
+    }
+  } catch(e) { console.error('Erro ao atualizar cache:', e) }
+}
+
+// Salva resgate no histórico persistente
+function salvarResgate(resgate) {
+  const key = 'cf_resgates'
+  const existentes = JSON.parse(localStorage.getItem(key) || '[]')
+  existentes.unshift(resgate)
+  // Mantém últimos 500 resgates
+  if (existentes.length > 500) existentes.splice(500)
+  localStorage.setItem(key, JSON.stringify(existentes))
+}
+
+// Renderiza histórico do dia
+function renderHistorico() {
+  const resgates = JSON.parse(localStorage.getItem('cf_resgates') || '[]')
+  const hoje = new Date().toDateString()
+  const doHoje = resgates.filter(r => new Date(r.data).toDateString() === hoje)
+
+  const total = doHoje.reduce((s, r) => s + (r.valorResgatado || 0), 0)
+  document.getElementById('histTotal').textContent =
+    doHoje.length > 0 ? `${doHoje.length} resgate${doHoje.length>1?'s':''} · R$ ${fmt(total)}` : ''
+
+  const el = document.getElementById('histList')
+  if (!doHoje.length) {
+    el.innerHTML = '<div class="hist-empty">Nenhum resgate hoje</div>'
+    return
+  }
+  el.innerHTML = doHoje.map(r => {
+    const hora = new Date(r.data).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})
+    return `<div class="hist-item">
+      <div class="hist-item-left">
+        <div class="hist-nome">${esc(r.nome)}</div>
+        <div class="hist-meta">${hora} · ${esc(r.loja)} · ${esc(r.vendedor)}</div>
+      </div>
+      <div class="hist-val">- R$ ${fmt(r.valorResgatado)}</div>
+    </div>`
+  }).join('')
 }
 
 function novo() {
   document.getElementById('cpf').value = ''
-  hide('result'); hide('empty')
+  document.getElementById('valorUsar').value = ''
+  document.getElementById('valorCompra').value = ''
+  document.getElementById('limiteInfo').style.display = 'none'
+  document.getElementById('usarErro').style.display = 'none'
+  clienteAtual = null; saldoAtual = 0; limiteAtual = 0
+  hide('result'); hide('empty'); hide('success')
   document.getElementById('cpf').focus()
 }
 
-function show(id) { document.getElementById(id).classList.add('on') }
-function hide(id) { document.getElementById(id).classList.remove('on') }
+// Config
 function toggleCfg() { document.getElementById('cfgPanel').classList.toggle('on') }
 function saveCfg() {
-  cfg.domain = document.getElementById('cfDomain').value.trim().replace(/^https?:\/\//,'').replace(/\/$/,'')
-  cfg.token = document.getElementById('cfToken').value.trim()
+  cfg = {
+    domain: document.getElementById('cfDomain').value.trim().replace(/^https?:\/\//,'').replace(/\/$/,''),
+    token: document.getElementById('cfToken').value.trim(),
+    loja: document.getElementById('cfLoja').value.trim(),
+    vendedor: document.getElementById('cfVendedor').value.trim()
+  }
   localStorage.setItem('popup_cfg_v2', JSON.stringify(cfg))
   document.getElementById('cfgPanel').classList.remove('on')
   showToast('Configuração salva!')
 }
-function fmtCpf(v) {
-  const d=(v||'').replace(/\D/g,'')
-  if(d.length===11) return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4')
-  return v
+
+// Utils
+function getCache() {
+  try { return JSON.parse(localStorage.getItem('cf_clientes_v2') || '{}').clientes || [] } catch { return [] }
 }
-function showToast(msg) {
-  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('on')
-  setTimeout(()=>t.classList.remove('on'), 3000)
-}
-// Recarrega cache ao focar (caso o painel admin tenha sincronizado)
-window.addEventListener('focus', () => {})
+function fmt(n) { return Number(n).toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.') }
+function fmtCpf(v) { const d=(v||'').replace(/\D/g,''); return d.length===11?d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4'):v }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;') }
+function show(id) { const e=document.getElementById(id); if(e)e.classList.add('on') }
+function hide(id) { const e=document.getElementById(id); if(e)e.classList.remove('on') }
+function showToast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),3000) }
+
+window.addEventListener('focus', renderHistorico)
 </script>
 </body>
 </html>
