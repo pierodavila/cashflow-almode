@@ -360,10 +360,10 @@ window.fecharDetalhe = function() {
 
 // EXPORTAR EXCEL (CSV que o Excel abre)
 window.exportarExcel = function() {
-  const rows = [['Nome','CPF','Segmento','Total Compras','Cashback','Nº Compras','Score R','Score F','Score M','Score Total']]
+  const rows = [['Nome','CPF','Loja','Segmento','Total Compras','Cashback','Nº Compras','Score R','Score F','Score M','Score Total']]
   for (const c of clientesRFM) {
     const s = SEGMENTOS[c.segmento]
-    rows.push([c.nome, fmtCpf(c.cpf), s?.label||c.segmento,
+    rows.push([c.nome, fmtCpf(c.cpf), c.loja||'—', s?.label||c.segmento,
       (c.totalCompras||0).toFixed(2), (c.cashback||0).toFixed(2),
       c.qtdVendas||0, c.r, c.f, c.m, c.rfm])
   }
@@ -374,9 +374,9 @@ window.exportarExcel = function() {
 window.exportarSegmento = function() {
   if (!segmentoAtivo) return
   const s = SEGMENTOS[segmentoAtivo]
-  const rows = [['Nome','CPF','Total Compras','Cashback','Nº Compras','Score RFM']]
+  const rows = [['Nome','CPF','Loja','Telefone','Total Compras','Cashback','Nº Compras','Score RFM']]
   for (const c of clientesSegmento) {
-    rows.push([c.nome, fmtCpf(c.cpf), (c.totalCompras||0).toFixed(2), (c.cashback||0).toFixed(2), c.qtdVendas||0, c.rfm])
+    rows.push([c.nome, fmtCpf(c.cpf), c.loja||'—', c.telefone||'', (c.totalCompras||0).toFixed(2), (c.cashback||0).toFixed(2), c.qtdVendas||0, c.rfm])
   }
   baixarCSV(rows, `cashflow-${segmentoAtivo}.csv`)
   showToast('✅ Segmento exportado!')
