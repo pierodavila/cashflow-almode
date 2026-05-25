@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>CashFlow — Importar Portal Antigo</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080810;--s:#10101a;--s2:#18182a;--bd:#252538;--ac:#00e5a0;--tx:#e6e6f0;--mt:#666688;--fn:'IBM Plex Sans',sans-serif;--mo:'IBM Plex Mono',monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:var(--fn);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:var(--s);border:1px solid var(--bd);border-radius:16px;padding:32px;width:100%;max-width:600px}
+h1{font-size:20px;font-weight:600;letter-spacing:-.03em;margin-bottom:4px}
+h1 span{color:var(--ac)}
+.sub{font-size:13px;color:var(--mt);margin-bottom:24px}
+.cf-group{margin-bottom:14px}
+.cf-group label{font-family:var(--mo);font-size:10px;color:var(--mt);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em}
+.cf-group input{width:100%;padding:10px 12px;background:var(--s2);border:1px solid var(--bd);border-radius:9px;color:var(--tx);font-size:13px;font-family:var(--mo);outline:none;transition:border-color .15s}
+.cf-group input:focus{border-color:var(--ac)}
+.btn{width:100%;padding:12px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:none;font-family:var(--fn);transition:all .15s;margin-top:4px}
+.btn-start{background:var(--ac);color:#080810}
+.btn-start:hover{filter:brightness(1.1)}
+.btn-start:disabled{opacity:.4;cursor:not-allowed}
+.progress-wrap{margin-top:20px;display:none}
+.progress-wrap.show{display:block}
+.progress-bar-bg{height:6px;background:var(--bd);border-radius:3px;overflow:hidden;margin:10px 0}
+.progress-bar-fill{height:100%;background:var(--ac);border-radius:3px;transition:width .3s;width:0%}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:14px 0}
+.stat{background:var(--s2);border-radius:9px;padding:12px;text-align:center}
+.stat-val{font-size:20px;font-weight:600;color:var(--ac);letter-spacing:-.03em}
+.stat-lbl{font-size:10px;color:var(--mt);font-family:var(--mo);text-transform:uppercase;margin-top:2px}
+.log{background:var(--s2);border:1px solid var(--bd);border-radius:9px;padding:12px;max-height:160px;overflow-y:auto;margin-top:12px}
+.log-row{font-family:var(--mo);font-size:11px;color:var(--mt);padding:2px 0;display:flex;gap:8px}
+.log-t{color:var(--ac);min-width:60px}
+.log-ok{color:var(--ac)}
+.log-err{color:#e24b4a}
+.done-box{background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.25);border-radius:10px;padding:16px;text-align:center;margin-top:16px;display:none}
+.done-box.show{display:block}
+.done-box h3{color:var(--ac);font-size:16px;margin-bottom:6px}
+.done-box p{font-size:12px;color:var(--mt)}
+.btn-rfm{display:inline-block;margin-top:12px;padding:10px 20px;background:var(--ac);color:#080810;border-radius:9px;font-size:13px;font-weight:600;text-decoration:none;cursor:pointer;border:none;font-family:var(--fn)}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Cash<span>Flow</span> — Importar Portal Antigo</h1>
+  <div class="sub">Puxa vendas de outro portal Almode e mescla com os dados atuais</div>
+
+  <div class="cf-group">
+    <label>Domínio do Portal Antigo</label>
+    <input type="text" id="domain" placeholder="multimarcas.almode.com" value="multimarcas.almode.com">
+  </div>
+  <div class="cf-group">
+    <label>Token JWT (copie do portal antigo)</label>
+    <input type="password" id="token" placeholder="eyJhbGci...">
+  </div>
+  <div class="cf-group">
+    <label>% Cashback</label>
+    <input type="number" id="pct" value="5" min="1" max="30">
+  </div>
+  <div class="cf-group">
+    <label>Máx. páginas (50 vendas/pág) — comece com 500</label>
+    <input type="number" id="maxPags" value="500" min="10" max="5000">
+  </div>
+
+  <button class="btn btn-start" id="btnStart" onclick="iniciar()">🚀 Iniciar Importação</button>
+
+  <div class="progress-wrap" id="progressWrap">
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--mt)">
+      <span id="progLabel">Iniciando...</span>
+      <span id="progPct">0%</span>
+    </div>
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progBar"></div></div>
+
+    <div class="stats">
+      <div class="stat"><div class="stat-val" id="sPaginas">0</div><div class="stat-lbl">Páginas</div></div>
+      <div class="stat"><div class="stat-val" id="sClientes">0</div><div class="stat-lbl">Clientes</div></div>
+      <div class="stat"><div class="stat-val" id="sVendas">0</div><div class="stat-lbl">Vendas OK</div></div>
+    </div>
+
+    <div class="log" id="logBox">
+      <div class="log-row"><span class="log-t">--:--:--</span><span>Aguardando...</span></div>
+    </div>
+  </div>
+
+  <div class="done-box" id="doneBox">
+    <h3>✅ Importação concluída!</h3>
+    <p id="doneMsg"></p>
+    <a href="rfm.html" class="btn-rfm">📊 Ver Painel RFM</a>
+  </div>
+</div>
+
+<script>
+let running = false
+
+async function iniciar() {
+  if (running) return
+  const domain = document.getElementById('domain').value.trim().replace(/^https?:\/\//,'').replace(/\/$/,'')
+  const token = document.getElementById('token').value.trim()
+  const pct = parseFloat(document.getElementById('pct').value) / 100
+  const maxPags = parseInt(document.getElementById('maxPags').value)
+
+  if (!domain || !token) { alert('Preencha domínio e token!'); return }
+
+  running = true
+  document.getElementById('btnStart').disabled = true
+  document.getElementById('progressWrap').classList.add('show')
+
+  addLog('Conectando ao portal: ' + domain)
+
+  // Carrega clientes existentes do localStorage
+  let mapa = {}
+  try {
+    const raw = localStorage.getItem('cf_clientes_v2')
+    if (raw) {
+      const lista = JSON.parse(raw).clientes || []
+      for (const c of lista) {
+        const cpf = (c.cpf||'').replace(/\D/g,'')
+        if (cpf) mapa[cpf] = { ...c }
+      }
+    }
+    addLog('Clientes existentes carregados: ' + Object.keys(mapa).length)
+  } catch(e) { addLog('Erro ao carregar dados existentes: ' + e.message, 'err') }
+
+  // Pega total de páginas
+  let totalPaginas = maxPags
+  try {
+    const info = await fetchAlmode(domain, token, '/api/vendas?page=0&size=1')
+    totalPaginas = Math.min(info.totalPages || maxPags, maxPags)
+    addLog('Total vendas no portal antigo: ' + info.totalElements + ' (' + totalPaginas + ' páginas)')
+  } catch(e) {
+    addLog('Erro ao conectar: ' + e.message, 'err')
+    running = false; document.getElementById('btnStart').disabled = false; return
+  }
+
+  let pagAtual = 0
+  let vendasOk = 0
+  const PAGE_SIZE = 50
+  const LOTE = 5 // páginas em paralelo
+
+  while (pagAtual < totalPaginas) {
+    const promises = []
+    for (let i = pagAtual; i < Math.min(pagAtual + LOTE, totalPaginas); i++) {
+      promises.push(fetchAlmode(domain, token, `/api/vendas?page=${i}&size=${PAGE_SIZE}`).catch(()=>({content:[]})))
+    }
+
+    const resultados = await Promise.all(promises)
+
+    for (const r of resultados) {
+      for (const v of (r.content||[])) {
+        if (v.situacao !== 'Concluida') continue
+        const cpf = (v.cpfDoCliente||'').replace(/\D/g,'')
+        if (cpf.length < 11) continue
+        const valor = (v.pagamentos||[]).reduce((s,p)=>s+(parseFloat(p.valor)||0),0)
+        if (valor <= 0) continue
+        const nome = v.cliente?.razaoSocialOuNome || '—'
+        if (!mapa[cpf]) mapa[cpf] = { cpf, nome, totalCompras:0, cashback:0, qtdVendas:0, ultimaCompra:v.dataHora, telefone:(v.cliente?.telefones||[])[0]||'' }
+        mapa[cpf].totalCompras += valor
+        mapa[cpf].cashback += valor * pct
+        mapa[cpf].qtdVendas++
+        if (nome !== '—') mapa[cpf].nome = nome
+        if (v.dataHora > (mapa[cpf].ultimaCompra||'')) mapa[cpf].ultimaCompra = v.dataHora
+        vendasOk++
+      }
+    }
+
+    pagAtual = Math.min(pagAtual + LOTE, totalPaginas)
+    const pctVal = Math.round(pagAtual / totalPaginas * 100)
+    const nClientes = Object.keys(mapa).length
+
+    document.getElementById('progBar').style.width = pctVal + '%'
+    document.getElementById('progPct').textContent = pctVal + '%'
+    document.getElementById('progLabel').textContent = `Página ${pagAtual} de ${totalPaginas}`
+    document.getElementById('sPaginas').textContent = pagAtual
+    document.getElementById('sClientes').textContent = nClientes
+    document.getElementById('sVendas').textContent = vendasOk
+
+    if (pagAtual % 50 === 0) {
+      addLog(`${pagAtual}/${totalPaginas} páginas — ${nClientes} clientes — ${vendasOk} vendas`, 'ok')
+      // Salva parcial
+      const clientes = Object.values(mapa).sort((a,b)=>b.cashback-a.cashback)
+      localStorage.setItem('cf_clientes_v2', JSON.stringify({ clientes, syncLastAt: new Date().toISOString() }))
+    }
+
+    // Pequena pausa para não travar o browser
+    await new Promise(r => setTimeout(r, 50))
+  }
+
+  // Salva final
+  const clientes = Object.values(mapa).sort((a,b)=>b.cashback-a.cashback)
+  localStorage.setItem('cf_clientes_v2', JSON.stringify({ clientes, syncLastAt: new Date().toISOString() }))
+
+  addLog('✅ Concluído! ' + clientes.length + ' clientes mesclados', 'ok')
+  document.getElementById('doneMsg').textContent = clientes.length + ' clientes mesclados com ' + vendasOk + ' vendas do portal antigo'
+  document.getElementById('doneBox').classList.add('show')
+  running = false
+}
+
+async function fetchAlmode(domain, token, path) {
+  const r = await fetch('https://' + domain + path, {
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+  if (!r.ok) throw new Error('HTTP ' + r.status)
+  return r.json()
+}
+
+function addLog(msg, type='info') {
+  const t = new Date().toLocaleTimeString('pt-BR')
+  const cls = type==='ok' ? 'log-ok' : type==='err' ? 'log-err' : ''
+  const row = document.createElement('div')
+  row.className = 'log-row'
+  row.innerHTML = `<span class="log-t">${t}</span><span class="${cls}">${msg}</span>`
+  const box = document.getElementById('logBox')
+  box.appendChild(row)
+  box.scrollTop = box.scrollHeight
+}
+</script>
+</body>
+</html>
