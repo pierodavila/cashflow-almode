@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Consulta Cashback</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#080810; --s:#10101a; --s2:#18182a; --bd:#252538; --ac:#4fffb0; --ac-dim:rgba(79,255,176,.12); --ac-bd:rgba(79,255,176,.25); --dk:#ff5566; --tx:#e6e6f0; --mt:#666688; --fn:'IBM Plex Sans',sans-serif; --mo:'IBM Plex Mono',monospace; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--tx); font-family:var(--fn); min-height:100vh; display:flex; align-items:center; justify-content:center; }
+  body::before { content:''; position:fixed; inset:0; background:radial-gradient(ellipse at 50% 30%, rgba(79,255,176,.05) 0%,transparent 65%); pointer-events:none; }
+
+  .card { background:var(--s); border:1px solid var(--bd); border-radius:16px; padding:30px 26px; width:380px; box-shadow:0 28px 70px rgba(0,0,0,.55); position:relative; z-index:1; animation:up .4s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes up { from{opacity:0;transform:translateY(24px) scale(.97)} to{opacity:1;transform:none} }
+
+  .logo { font-size:16px; font-weight:600; letter-spacing:-.04em; text-align:center; margin-bottom:2px; }
+  .logo span { color:var(--ac); }
+  .logo-sub { font-size:10px; color:var(--mt); text-align:center; font-family:var(--mo); margin-bottom:22px; }
+
+  .lbl { font-family:var(--mo); font-size:10px; color:var(--mt); text-transform:uppercase; letter-spacing:.1em; margin-bottom:6px; }
+  .row { display:flex; gap:8px; margin-bottom:16px; }
+  .cpf { flex:1; padding:12px 13px; background:var(--s2); border:1px solid var(--bd); border-radius:10px; color:var(--tx); font-size:16px; font-family:var(--mo); outline:none; transition:border-color .15s, box-shadow .15s; letter-spacing:.04em; }
+  .cpf:focus { border-color:var(--ac); box-shadow:0 0 0 3px rgba(79,255,176,.1); }
+  .go { padding:12px 15px; background:var(--ac); color:#080810; border:none; border-radius:10px; font-size:12px; font-weight:700; cursor:pointer; font-family:var(--fn); transition:all .15s; white-space:nowrap; }
+  .go:hover { filter:brightness(1.1); transform:scale(1.02); }
+
+  .loading { display:none; text-align:center; padding:20px; color:var(--mt); font-size:12px; }
+  .loading.on { display:block; }
+
+  .result { display:none; animation:pop .3s cubic-bezier(.34,1.56,.64,1); }
+  .result.on { display:block; }
+  @keyframes pop { from{opacity:0;transform:scale(.9)} to{opacity:1;transform:none} }
+  .res-card { background:var(--ac-dim); border:1px solid var(--ac-bd); border-radius:12px; padding:20px; text-align:center; }
+  .res-name { font-size:14px; font-weight:600; margin-bottom:1px; }
+  .res-cpf { font-size:10px; color:var(--mt); font-family:var(--mo); margin-bottom:14px; }
+  .res-lbl { font-size:10px; color:var(--mt); font-family:var(--mo); text-transform:uppercase; letter-spacing:.1em; }
+  .res-val { font-size:36px; font-weight:700; color:var(--ac); letter-spacing:-.04em; line-height:1.1; animation:cnt .4s ease; }
+  @keyframes cnt { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+  .res-btns { display:flex; gap:7px; margin-top:14px; }
+  .res-ok { flex:1; padding:10px; background:var(--ac); color:#080810; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:var(--fn); transition:all .15s; }
+  .res-ok:hover { filter:brightness(1.1); }
+  .res-new { flex:1; padding:10px; background:var(--s2); color:var(--mt); border:1px solid var(--bd); border-radius:8px; font-size:12px; cursor:pointer; font-family:var(--fn); transition:all .15s; }
+  .res-new:hover { color:var(--tx); }
+
+  .empty { display:none; background:rgba(255,85,102,.06); border:1px solid rgba(255,85,102,.2); border-radius:12px; padding:20px; text-align:center; animation:pop .3s cubic-bezier(.34,1.56,.64,1); }
+  .empty.on { display:block; }
+  .empty-ico { font-size:28px; margin-bottom:6px; }
+  .empty p { font-size:12px; color:var(--mt); }
+  .empty-new { margin-top:10px; padding:8px 20px; background:var(--s2); color:var(--mt); border:1px solid var(--bd); border-radius:8px; font-size:11px; cursor:pointer; font-family:var(--fn); }
+
+  .cfg-hint { text-align:center; margin-top:16px; font-size:10px; color:var(--mt); font-family:var(--mo); }
+  .cfg-hint a { color:var(--ac); cursor:pointer; }
+  .cfg-panel { display:none; margin-top:12px; background:var(--s2); border:1px solid var(--bd); border-radius:10px; padding:14px; }
+  .cfg-panel.on { display:block; }
+  .cf-lbl { font-family:var(--mo); font-size:10px; color:var(--mt); margin-bottom:3px; margin-top:8px; }
+  .cf-lbl:first-child { margin-top:0; }
+  .cf-in { width:100%; padding:7px 9px; background:var(--bg); border:1px solid var(--bd); border-radius:7px; color:var(--tx); font-size:11px; font-family:var(--mo); outline:none; transition:border-color .15s; }
+  .cf-in:focus { border-color:var(--ac); }
+  .cf-save { width:100%; margin-top:10px; padding:8px; background:var(--ac-dim); border:1px solid var(--ac-bd); border-radius:7px; color:var(--ac); font-size:11px; cursor:pointer; font-family:var(--fn); font-weight:500; }
+
+  .toast { position:fixed; bottom:18px; left:50%; transform:translateX(-50%) translateY(70px); background:var(--ac); color:#080810; padding:9px 20px; border-radius:25px; font-weight:600; font-size:12px; transition:transform .25s cubic-bezier(.34,1.56,.64,1); z-index:9999; white-space:nowrap; }
+  .toast.on { transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">Cash<span>Flow</span></div>
+  <div class="logo-sub">Ponto de Venda · Almode API</div>
+
+  <div class="lbl">CPF do Cliente</div>
+  <div class="row">
+    <input class="cpf" id="cpf" type="text" placeholder="000.000.000-00" maxlength="14"
+      oninput="mask(this)" onkeydown="if(event.key==='Enter')buscar()" autofocus>
+    <button class="go" onclick="buscar()">Consultar</button>
+  </div>
+
+  <div class="loading" id="loading">Consultando Almode...</div>
+
+  <div class="result" id="result">
+    <div class="res-card">
+      <div class="res-name" id="rNome"></div>
+      <div class="res-cpf" id="rCpf"></div>
+      <div class="res-lbl">Cashback Disponível</div>
+      <div class="res-val" id="rVal"></div>
+      <div class="res-btns">
+        <button class="res-ok" onclick="novo()">✓ Confirmado</button>
+        <button class="res-new" onclick="novo()">Nova Consulta</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="empty" id="empty">
+    <div class="empty-ico">💸</div>
+    <p>Nenhum cashback disponível para este CPF</p>
+    <button class="empty-new" onclick="novo()">Nova Consulta</button>
+  </div>
+
+  <div class="cfg-hint"><a onclick="toggleCfg()">⚙ configurar API</a></div>
+  <div class="cfg-panel" id="cfgPanel">
+    <div class="cf-lbl">Domínio Almode</div>
+    <input class="cf-in" id="cfDomain" placeholder="suaempresa.almode.dev">
+    <div class="cf-lbl">Token Bearer</div>
+    <input class="cf-in" type="password" id="cfToken" placeholder="token-admin">
+    <button class="cf-save" onclick="saveCfg()">Salvar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// Configuração
+let cfg = JSON.parse(localStorage.getItem('popup_cfg_v2') || '{}')
+if (cfg.domain) document.getElementById('cfDomain').value = cfg.domain
+if (cfg.token) document.getElementById('cfToken').value = cfg.token
+
+// Cache de clientes do painel admin (shared localStorage)
+function getCacheClientes() {
+  try { const r = localStorage.getItem('cf_clientes_v2'); return r ? JSON.parse(r).clientes || [] : [] }
+  catch { return [] }
+}
+
+function mask(el) {
+  let v = el.value.replace(/\D/g,'')
+  if (v.length<=3) el.value=v
+  else if (v.length<=6) el.value=v.slice(0,3)+'.'+v.slice(3)
+  else if (v.length<=9) el.value=v.slice(0,3)+'.'+v.slice(3,6)+'.'+v.slice(6)
+  else el.value=v.slice(0,3)+'.'+v.slice(3,6)+'.'+v.slice(6,9)+'-'+v.slice(9,11)
+}
+
+async function buscar() {
+  const cpf = document.getElementById('cpf').value.replace(/\D/g,'')
+  if (cpf.length < 11) { showToast('CPF deve ter 11 dígitos'); return }
+  hide('result'); hide('empty')
+  document.getElementById('loading').classList.add('on')
+
+  try {
+    // 1. Tenta cache local (instantâneo)
+    const cache = getCacheClientes()
+    const local = cache.find(c => c.cpf.replace(/\D/g,'') === cpf)
+
+    if (local) {
+      document.getElementById('loading').classList.remove('on')
+      mostrar(local.nome, local.cpf, local.cashback || 0)
+      return
+    }
+
+    // 2. Consulta API Almode em tempo real
+    if (!cfg.domain || !cfg.token) throw new Error('Configure domínio e token')
+    const res = await fetch(`https://${cfg.domain}/api/public/clientes?busca=${cpf}`, {
+      headers: { 'Authorization': `Bearer ${cfg.token}` }
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = await res.json()
+    const c = (data.content || [])[0] || data[0]
+
+    document.getElementById('loading').classList.remove('on')
+    if (c) {
+      mostrar(c.razaoSocialOuNome, c.cnpjOuCpf, parseFloat(c.disponivelEmCashback) || 0)
+    } else {
+      show('empty')
+    }
+  } catch (e) {
+    document.getElementById('loading').classList.remove('on')
+    show('empty')
+    showToast('Erro: ' + e.message)
+  }
+}
+
+function mostrar(nome, cpf, valor) {
+  document.getElementById('rNome').textContent = nome
+  document.getElementById('rCpf').textContent = fmtCpf(cpf)
+  document.getElementById('rVal').textContent = 'R$ ' + valor.toFixed(2).replace('.',',')
+  if (valor > 0) show('result'); else show('empty')
+}
+
+function novo() {
+  document.getElementById('cpf').value = ''
+  hide('result'); hide('empty')
+  document.getElementById('cpf').focus()
+}
+
+function show(id) { document.getElementById(id).classList.add('on') }
+function hide(id) { document.getElementById(id).classList.remove('on') }
+function toggleCfg() { document.getElementById('cfgPanel').classList.toggle('on') }
+function saveCfg() {
+  cfg.domain = document.getElementById('cfDomain').value.trim().replace(/^https?:\/\//,'').replace(/\/$/,'')
+  cfg.token = document.getElementById('cfToken').value.trim()
+  localStorage.setItem('popup_cfg_v2', JSON.stringify(cfg))
+  document.getElementById('cfgPanel').classList.remove('on')
+  showToast('Configuração salva!')
+}
+function fmtCpf(v) {
+  const d=(v||'').replace(/\D/g,'')
+  if(d.length===11) return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4')
+  return v
+}
+function showToast(msg) {
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('on')
+  setTimeout(()=>t.classList.remove('on'), 3000)
+}
+// Recarrega cache ao focar (caso o painel admin tenha sincronizado)
+window.addEventListener('focus', () => {})
+</script>
+</body>
+</html>
