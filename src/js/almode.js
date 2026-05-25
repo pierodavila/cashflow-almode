@@ -1,27 +1,25 @@
 /**
  * ╔══════════════════════════════════════════╗
- * ║  almode.js — Módulo de Integração API    ║
- * ║  CashFlow v2                             ║
+ * ║  almode.js — Integração API Real         ║
+ * ║  CashFlow v2 · Mapeado em 25/05/2026     ║
  * ╚══════════════════════════════════════════╝
  *
- * Este arquivo é o único ponto de contato com a API do Almode.
- * Toda a lógica de negócio e UI depende APENAS das funções exportadas aqui.
- * Para conectar o agente: preencha as funções abaixo com as chamadas reais.
+ * Endpoint base: https://{dominio}/api/vendas
+ * Auth: JWT_TOKEN do localStorage (mesmo token do painel)
  *
- * Endpoints utilizados (API Pública Almode):
- *   GET /api/public/clientes?busca={cpf}
- *   GET /api/public/clientes/resumido-por-loja?cnpjLoja={cnpj}&atualizadosApartirDe={data}
- *   GET /api/public/clientes/tipos
- *   (Seção Cashback nativa — a ser mapeada pelo agente)
- *
- * Auth: Bearer Token no header Authorization
+ * Campos mapeados:
+ *   cpfDoCliente         → CPF do cliente
+ *   cliente.razaoSocialOuNome → nome
+ *   pagamentos[].valor   → valor da venda (soma)
+ *   situacao             → filtrar só "Concluida"
+ *   dataHora             → data/hora da venda
+ *   pontoDeVenda.loja    → loja
  */
 
-// ─── Configuração (preenchida pelo usuário no app) ────────────────────────────
 let _config = {
-  domain: '',   // ex: "suaempresa.almode.dev"
-  token: '',    // Bearer token do admin
-  cnpj: '',     // CNPJ da loja (só números)
+  domain: '',
+  token: '',
+  cnpj: '',
   cashbackPct: 5
 }
 
@@ -45,163 +43,109 @@ async function http(path) {
       'Content-Type': 'application/json'
     }
   })
-  if (!res.ok) {
-    const body = await res.text().catch(() => '')
-    throw new Error(`Almode API ${res.status}: ${body || res.statusText}`)
-  }
+  if (!res.ok) throw new Error(`Almode API ${res.status}`)
   return res.json()
 }
 
-// ─── API pública ──────────────────────────────────────────────────────────────
-
-/**
- * Testa a conexão com a API.
- * @returns {Promise<boolean>}
- */
+// ─── Testa conexão ────────────────────────────────────────────────────────────
 export async function testarConexao() {
-  await http('/api/public/clientes/tipos')
-  return true
+  const data = await http('/api/vendas?page=0&size=1')
+  return { ok: true, totalVendas: data.totalElements }
 }
 
-/**
- * Busca um cliente pelo CPF.
- * Retorna os dados completos incluindo disponivelEmCashback.
- *
- * @param {string} cpf — apenas números
- * @returns {Promise<Cliente|null>}
- *
- * @typedef {Object} Cliente
- * @property {string} cnpjOuCpf
- * @property {string} razaoSocialOuNome
- * @property {number} disponivelEmCashback
- * @property {number} disponivelEmCredito
- * @property {string[]} telefones
- * @property {string|null} email
- */
+// ─── Busca cliente por CPF ────────────────────────────────────────────────────
 export async function buscarClientePorCpf(cpf) {
   const cpfLimpo = cpf.replace(/\D/g, '')
-  const data = await http(`/api/public/clientes?busca=${cpfLimpo}`)
-  const content = data.content || data || []
-  const cliente = Array.isArray(content) ? content[0] : content
-  if (!cliente || !cliente.cnpjOuCpf) return null
-  return normalizarCliente(cliente)
-}
-
-/**
- * Lista todos os clientes da loja (sincronização completa ou incremental).
- *
- * @param {string|null} atualizadosApartirDe — ISO datetime, ex: "2025-01-01T00:00:00"
- * @returns {Promise<ClienteResumido[]>}
- *
- * @typedef {Object} ClienteResumido
- * @property {string} cnpjOuCpf
- * @property {string} razaoSocialOuNome
- * @property {string[]} telefones
- * @property {boolean} inativo
- */
-export async function listarClientesDaLoja(atualizadosApartirDe = null) {
-  if (!_config.cnpj) throw new Error('Configure o CNPJ da loja')
-  let path = `/api/public/clientes/resumido-por-loja?cnpjLoja=${_config.cnpj}`
-  if (atualizadosApartirDe) {
-    path += `&atualizadosApartirDe=${encodeURIComponent(atualizadosApartirDe)}`
+  // Filtra vendas por CPF para montar o perfil do cliente
+  const data = await http(`/api/vendas?page=0&size=1&cpf=${cpfLimpo}`)
+  const vendas = data.content || []
+  if (!vendas.length) return null
+  const v = vendas[0]
+  const total = somarPagamentos(v.pagamentos)
+  return {
+    cpf: v.cpfDoCliente || cpfLimpo,
+    nome: v.cliente?.razaoSocialOuNome || '—',
+    cashback: 0, // calculado na sincronização
+    telefone: (v.cliente?.telefones || [])[0] || '',
+    email: v.cliente?.email || ''
   }
-  const data = await http(path)
-  const lista = Array.isArray(data) ? data : (data.content || [])
-  return lista.filter(c => !c.inativo)
 }
 
-/**
- * Sincronização completa: lista todos os clientes e busca detalhes de cashback.
- * Retorna um array com os dados enriquecidos.
- *
- * @param {function} onProgress — callback (atual, total) para atualizar barra
- * @returns {Promise<Cliente[]>}
- */
-export async function sincronizarTodosClientes(onProgress = null) {
-  const resumidos = await listarClientesDaLoja()
-  const total = resumidos.length
-  const resultado = []
+// ─── Busca TODAS as vendas (paginado) ─────────────────────────────────────────
+export async function buscarTodasVendas(onProgress = null) {
+  const PAGE_SIZE = 50
+  const primeira = await http(`/api/vendas?page=0&size=${PAGE_SIZE}`)
+  const totalPaginas = primeira.totalPages
+  const totalVendas = primeira.totalElements
 
-  // Busca em lotes de 10 para não sobrecarregar a API
-  const LOTE = 10
-  for (let i = 0; i < total; i += LOTE) {
-    const lote = resumidos.slice(i, i + LOTE)
-    const detalhes = await Promise.allSettled(
-      lote.map(c => buscarClientePorCpf(c.cnpjOuCpf))
-    )
-    detalhes.forEach((r, idx) => {
-      if (r.status === 'fulfilled' && r.value) {
-        resultado.push(r.value)
-      } else {
-        // fallback com dados resumidos
-        resultado.push(normalizarClienteResumido(lote[idx]))
+  let todasVendas = [...(primeira.content || [])]
+  if (onProgress) onProgress(todasVendas.length, totalVendas)
+
+  // Busca restante em paralelo (lotes de 5 páginas)
+  for (let p = 1; p < totalPaginas; p += 5) {
+    const lote = []
+    for (let i = p; i < Math.min(p + 5, totalPaginas); i++) {
+      lote.push(http(`/api/vendas?page=${i}&size=${PAGE_SIZE}`))
+    }
+    const resultados = await Promise.allSettled(lote)
+    resultados.forEach(r => {
+      if (r.status === 'fulfilled') {
+        todasVendas = todasVendas.concat(r.value.content || [])
       }
     })
-    if (onProgress) onProgress(Math.min(i + LOTE, total), total)
+    if (onProgress) onProgress(Math.min(todasVendas.length, totalVendas), totalVendas)
   }
 
-  return resultado
+  return todasVendas
 }
 
-// ─── STUB: Cashback nativo Almode ─────────────────────────────────────────────
-/**
- * ⚡ ÁREA DO AGENTE
- *
- * O Almode tem uma seção "Cashback" nativa na API.
- * O agente vai mapear os endpoints reais e preencher estas funções.
- *
- * Por enquanto o cashback é lido via disponivelEmCashback no endpoint de cliente.
- */
+// ─── Sincronização completa ───────────────────────────────────────────────────
+export async function sincronizarTodosClientes(onProgress = null) {
+  const vendas = await buscarTodasVendas(onProgress)
 
-/**
- * [STUB] Lança cashback para um cliente.
- * A ser implementado pelo agente após mapear os endpoints.
- *
- * @param {string} cpf
- * @param {number} valor
- * @returns {Promise<boolean>}
- */
-export async function lancarCashback(cpf, valor) {
-  // TODO: implementar após agente mapear endpoint de cashback
-  console.warn('[almode.js] lancarCashback ainda não implementado. CPF:', cpf, 'Valor:', valor)
-  throw new Error('Lançamento de cashback ainda não configurado. Aguarde integração do agente.')
-}
+  // Agrupa por CPF e calcula cashback
+  const mapa = {}
+  for (const v of vendas) {
+    // Só considera vendas concluídas
+    if (v.situacao !== 'Concluida') continue
 
-/**
- * [STUB] Resgata (queima) cashback de um cliente.
- *
- * @param {string} cpf
- * @param {number} valor
- * @returns {Promise<boolean>}
- */
-export async function resgatar(cpf, valor) {
-  // TODO: implementar após agente mapear endpoint de cashback
-  console.warn('[almode.js] resgatar ainda não implementado.')
-  throw new Error('Resgate de cashback ainda não configurado. Aguarde integração do agente.')
-}
+    const cpf = v.cpfDoCliente || v.cliente?.cnpjOuCpf
+    if (!cpf || cpf.length < 11) continue
 
-// ─── Normalização ─────────────────────────────────────────────────────────────
-function normalizarCliente(raw) {
-  return {
-    cpf: raw.cnpjOuCpf || '',
-    nome: raw.razaoSocialOuNome || '',
-    cashback: parseFloat(raw.disponivelEmCashback) || 0,
-    credito: parseFloat(raw.disponivelEmCredito) || 0,
-    telefone: (raw.telefones || [])[0] || '',
-    email: raw.email || '',
-    inativo: raw.inativo || false,
-    _raw: raw
+    const nome = v.cliente?.razaoSocialOuNome || '—'
+    const valor = somarPagamentos(v.pagamentos)
+    if (valor <= 0) continue
+
+    if (!mapa[cpf]) {
+      mapa[cpf] = {
+        cpf,
+        nome,
+        telefone: (v.cliente?.telefones || [])[0] || '',
+        email: v.cliente?.email || '',
+        totalCompras: 0,
+        cashback: 0,
+        qtdVendas: 0
+      }
+    }
+
+    mapa[cpf].totalCompras += valor
+    mapa[cpf].cashback += valor * (_config.cashbackPct / 100)
+    mapa[cpf].qtdVendas++
+    // Mantém nome mais recente
+    if (nome !== '—') mapa[cpf].nome = nome
   }
+
+  return Object.values(mapa).sort((a, b) => b.cashback - a.cashback)
 }
 
-function normalizarClienteResumido(raw) {
-  return {
-    cpf: raw.cnpjOuCpf || '',
-    nome: raw.razaoSocialOuNome || '',
-    cashback: 0,
-    credito: 0,
-    telefone: (raw.telefones || [])[0] || '',
-    email: '',
-    inativo: raw.inativo || false
-  }
+// ─── Utilitários ─────────────────────────────────────────────────────────────
+function somarPagamentos(pagamentos = []) {
+  return pagamentos.reduce((s, p) => s + (parseFloat(p.valor) || 0), 0)
+}
+
+export function fmtCpf(v) {
+  const d = (v || '').replace(/\D/g, '')
+  if (d.length === 11) return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+  if (d.length === 14) return d.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
+  return v
 }
