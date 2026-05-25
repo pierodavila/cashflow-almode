@@ -18,6 +18,7 @@
   <div class="badges">
     <span class="badge" id="apiBadge" data-live="false">API: configurar</span>
     <span class="badge" id="pctBadge">5% cashback</span>
+    <span class="badge" id="syncBadge" style="cursor:pointer" onclick="AutoSync.forcarSync()" title="Clique para sincronizar agora">↺ nunca sincronizado</span>
     <button class="btn btn-ghost" style="padding:5px 12px;font-size:11px" onclick="App.openPopup()">
       🔍 Abrir Pop-up Caixa
     </button>
@@ -377,5 +378,177 @@
   function show(id) { document.getElementById(id).style.display = 'block' }
   function hide(id) { document.getElementById(id).style.display = 'none' }
 </script>
+
+<script type="module">
+// ╔══════════════════════════════════════════╗
+// ║  AutoSync — Sincronização automática     ║
+// ║  Estratégia incremental: só novas vendas ║
+// ╚══════════════════════════════════════════╝
+
+const AutoSync = {
+  INTERVALO_HORAS: 24,
+  PAGINAS_INCREMENTAL: 20,  // ~1000 vendas mais recentes
+  rodando: false,
+
+  // Inicializa ao carregar o app
+  async init() {
+    const cfg = AutoSync.getCfg()
+    AutoSync.atualizarBadge()
+
+    if (!cfg.domain || !cfg.token) return // Sem config, não sincroniza
+
+    const ultimaSync = localStorage.getItem('cf_sync_last_auto')
+    const agora = Date.now()
+    const diffHoras = ultimaSync ? (agora - parseInt(ultimaSync)) / 3600000 : 999
+
+    if (diffHoras >= AutoSync.INTERVALO_HORAS) {
+      console.log('[AutoSync] Iniciando sync incremental automático...')
+      await AutoSync.rodarIncremental()
+    } else {
+      const proxima = new Date(parseInt(ultimaSync) + AutoSync.INTERVALO_HORAS * 3600000)
+      console.log('[AutoSync] Próxima sync:', proxima.toLocaleTimeString('pt-BR'))
+    }
+  },
+
+  // Sync incremental — só últimas N páginas
+  async rodarIncremental() {
+    if (AutoSync.rodando) return
+    AutoSync.rodando = true
+    AutoSync.setBadge('↻ sincronizando...', '#ef9f27')
+
+    try {
+      const cfg = AutoSync.getCfg()
+      const CASHBACK_PCT = cfg.pct / 100
+      const PAGE_SIZE = 50
+
+      // Pega apenas as últimas páginas (vendas mais recentes)
+      const promises = []
+      for (let p = 0; p < AutoSync.PAGINAS_INCREMENTAL; p++) {
+        promises.push(
+          fetch(`https://${cfg.domain}/api/vendas?page=${p}&size=${PAGE_SIZE}`, {
+            headers: { 'Authorization': `Bearer ${cfg.token}` }
+          }).then(r => r.json()).catch(() => ({ content: [] }))
+        )
+      }
+
+      const resultados = await Promise.allSettled(promises)
+      const novasVendas = []
+      for (const r of resultados) {
+        if (r.status === 'fulfilled') novasVendas.push(...(r.value.content || []))
+      }
+
+      // Carrega base existente
+      const raw = localStorage.getItem('cf_clientes_v2')
+      const base = raw ? (JSON.parse(raw).clientes || []) : []
+      const mapa = {}
+      for (const c of base) {
+        if (c.cpf) mapa[c.cpf] = { ...c }
+      }
+
+      // Merge das novas vendas
+      let novas = 0
+      for (const v of novasVendas) {
+        if (v.situacao !== 'Concluida') continue
+        const cpf = (v.cpfDoCliente || '').replace(/\D/g, '')
+        if (cpf.length < 11) continue
+        const valor = (v.pagamentos || []).reduce((s, p) => s + (parseFloat(p.valor) || 0), 0)
+        if (valor <= 0) continue
+
+        const nome = v.cliente?.razaoSocialOuNome || '—'
+        const loja = v.pontoDeVenda?.loja?.nomeFantasia || '—'
+        const tel = (v.cliente?.telefones || [])[0] || ''
+
+        if (!mapa[cpf]) {
+          mapa[cpf] = { cpf, nome, totalCompras: 0, cashback: 0, qtdVendas: 0, telefone: tel, ultimaCompra: '', lojas: {}, loja }
+          novas++
+        }
+
+        // Só adiciona vendas realmente novas (pela data)
+        const dataVenda = v.dataHora || ''
+        if (dataVenda > (mapa[cpf].ultimaCompra || '')) {
+          mapa[cpf].totalCompras += valor
+          mapa[cpf].cashback += valor * CASHBACK_PCT
+          mapa[cpf].qtdVendas++
+          mapa[cpf].ultimaCompra = dataVenda
+          if (nome !== '—') mapa[cpf].nome = nome
+          if (tel) mapa[cpf].telefone = tel
+          if (!mapa[cpf].lojas) mapa[cpf].lojas = {}
+          if (!mapa[cpf].lojas[loja]) mapa[cpf].lojas[loja] = { total: 0, qtd: 0 }
+          mapa[cpf].lojas[loja].total += valor
+          mapa[cpf].lojas[loja].qtd++
+        }
+      }
+
+      // Salva resultado
+      const clientes = Object.values(mapa).sort((a, b) => b.cashback - a.cashback)
+      localStorage.setItem('cf_clientes_v2', JSON.stringify({
+        clientes,
+        syncLastAt: new Date().toISOString()
+      }))
+      localStorage.setItem('cf_sync_last_auto', Date.now().toString())
+
+      const agora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+      AutoSync.setBadge(`✓ sync ${agora}`, '#00e5a0')
+      console.log(`[AutoSync] Concluído: ${clientes.length} clientes, ${novas} novos`)
+
+      // Atualiza UI se o dashboard estiver aberto
+      if (typeof App !== 'undefined' && App.renderDashboard) {
+        setTimeout(() => App.renderDashboard(), 500)
+      }
+
+    } catch (e) {
+      console.error('[AutoSync] Erro:', e)
+      AutoSync.setBadge('⚠ erro na sync', '#e24b4a')
+    }
+
+    AutoSync.rodando = false
+  },
+
+  // Força sync completa manualmente
+  async forcarSync() {
+    if (AutoSync.rodando) return
+    const cfg = AutoSync.getCfg()
+    if (!cfg.domain || !cfg.token) {
+      alert('Configure o domínio e token do Almode nas configurações primeiro.')
+      return
+    }
+    await AutoSync.rodarIncremental()
+  },
+
+  // Utilitários
+  getCfg() {
+    const raw = localStorage.getItem('cf_config')
+    return raw ? JSON.parse(raw) : {}
+  },
+
+  atualizarBadge() {
+    const ultima = localStorage.getItem('cf_sync_last_auto')
+    if (!ultima) return
+    const d = new Date(parseInt(ultima))
+    const hora = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    const hoje = d.toLocaleDateString('pt-BR') === new Date().toLocaleDateString('pt-BR')
+    const label = hoje ? `✓ sync ${hora}` : `✓ sync ${d.toLocaleDateString('pt-BR')}`
+    AutoSync.setBadge(label, '#00e5a0')
+  },
+
+  setBadge(texto, cor) {
+    const b = document.getElementById('syncBadge')
+    if (!b) return
+    b.textContent = texto
+    b.style.color = cor
+    b.style.borderColor = cor + '44'
+  }
+}
+
+// Exporta para uso global
+window.AutoSync = AutoSync
+
+// Inicia após 2 segundos (deixa o app carregar primeiro)
+setTimeout(() => AutoSync.init(), 2000)
+
+// Verifica a cada hora se precisa sincronizar
+setInterval(() => AutoSync.init(), 3600000)
+</script>
+
 </body>
 </html>
