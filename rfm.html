@@ -113,6 +113,18 @@ tr:hover td{background:rgba(255,255,255,.015)}
   <div class="page-sub">Segmentação automática de clientes por Recência, Frequência e Valor monetário</div>
 
   <!-- STATS -->
+  <!-- FILTRO LOJA -->
+  <div style="display:flex;gap:10px;align-items:center;margin-bottom:20px;flex-wrap:wrap">
+    <span style="font-size:12px;color:var(--mt);font-family:var(--mo)">FILTRAR POR LOJA:</span>
+    <select id="filtroLoja" onchange="aplicarFiltro()" style="padding:8px 12px;background:var(--s2);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-size:12px;font-family:var(--mo);outline:none;cursor:pointer">
+      <option value="">Todas as lojas</option>
+      <option value="FORUM OUTLET">FORUM OUTLET</option>
+      <option value="COLCCI OUTLET OPRJ">COLCCI OUTLET OPRJ</option>
+      <option value="TRITON OUTLET">TRITON OUTLET</option>
+    </select>
+    <span id="filtroInfo" style="font-size:11px;color:var(--mt)"></span>
+  </div>
+
   <div class="stats-top">
     <div class="stat"><div class="stat-lbl">Total Clientes</div><div class="stat-val" id="sTotalClientes">—</div></div>
     <div class="stat"><div class="stat-lbl">Cashback Total</div><div class="stat-val green" id="sTotalCashback">—</div></div>
@@ -194,6 +206,7 @@ tr:hover td{background:rgba(255,255,255,.015)}
 import { calcularRFM, resumoPorSegmento, SEGMENTOS } from './src/js/rfm.js'
 
 let todosClientes = []
+let clientesFiltrados = []
 let clientesRFM = []
 let segmentoAtivo = null
 let clientesSegmento = []
@@ -220,7 +233,8 @@ const ACOES = {
   if (!todosClientes.length) { showToast('Nenhum cliente encontrado'); return }
   showLoading('Calculando RFM...')
   setTimeout(() => {
-    clientesRFM = calcularRFM(todosClientes)
+    clientesFiltrados = todosClientes
+    clientesRFM = calcularRFM(clientesFiltrados)
     renderStats()
     renderSegGrid()
     hideLoading()
@@ -415,6 +429,21 @@ function fmtCpf(v) {
 }
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;') }
 function setText(id,t) { const el=document.getElementById(id); if(el) el.textContent=t }
+window.aplicarFiltro = function() {
+  const loja = document.getElementById('filtroLoja').value
+  clientesFiltrados = loja ? todosClientes.filter(c => c.loja === loja) : todosClientes
+  const info = document.getElementById('filtroInfo')
+  info.textContent = loja ? clientesFiltrados.length + ' clientes nesta loja' : ''
+  showLoading('Recalculando RFM...')
+  fecharDetalhe()
+  setTimeout(() => {
+    clientesRFM = calcularRFM(clientesFiltrados)
+    renderStats()
+    renderSegGrid()
+    hideLoading()
+  }, 100)
+}
+
 function showToast(msg) {
   const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show')
   setTimeout(()=>t.classList.remove('show'),3200)
