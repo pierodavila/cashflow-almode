@@ -58,7 +58,11 @@ h1 span{color:var(--ac)}
     <input type="number" id="pct" value="5" min="1" max="30">
   </div>
   <div class="cf-group">
-    <label>Máx. páginas (50 vendas/pág) — comece com 500</label>
+    <label>Página inicial (0 = começo, 500 = continua de onde parou)</label>
+    <input type="number" id="startPag" value="0" min="0" max="50000">
+  </div>
+  <div class="cf-group">
+    <label>Quantas páginas processar nesta rodada</label>
     <input type="number" id="maxPags" value="500" min="10" max="5000">
   </div>
 
@@ -97,7 +101,8 @@ async function iniciar() {
   const domain = document.getElementById('domain').value.trim().replace(/^https?:\/\//,'').replace(/\/$/,'')
   const token = document.getElementById('token').value.trim()
   const pct = parseFloat(document.getElementById('pct').value) / 100
-  const maxPags = parseInt(document.getElementById('maxPags').value)
+  const startPag = parseInt(document.getElementById('startPag').value) || 0
+  const maxPags = parseInt(document.getElementById('maxPags').value) || 500
 
   if (!domain || !token) { alert('Preencha domínio e token!'); return }
 
@@ -122,17 +127,17 @@ async function iniciar() {
   } catch(e) { addLog('Erro ao carregar dados existentes: ' + e.message, 'err') }
 
   // Pega total de páginas
-  let totalPaginas = maxPags
+  let totalPaginas = startPag + maxPags
   try {
     const info = await fetchAlmode(domain, token, '/api/vendas?page=0&size=1')
-    totalPaginas = Math.min(info.totalPages || maxPags, maxPags)
-    addLog('Total vendas no portal antigo: ' + info.totalElements + ' (' + totalPaginas + ' páginas)')
+    totalPaginas = Math.min(startPag + maxPags, info.totalPages)
+    addLog('Total vendas no portal antigo: ' + info.totalElements + ' — processando páginas ' + startPag + ' até ' + totalPaginas)
   } catch(e) {
     addLog('Erro ao conectar: ' + e.message, 'err')
     running = false; document.getElementById('btnStart').disabled = false; return
   }
 
-  let pagAtual = 0
+  let pagAtual = startPag
   let vendasOk = 0
   const PAGE_SIZE = 50
   const LOTE = 5 // páginas em paralelo
