@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CashFlow — Painel RFM</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080810;--s:#10101a;--s2:#18182a;--bd:#252538;--ac:#00e5a0;--ac2:rgba(0,229,160,.1);--ac3:rgba(0,229,160,.2);--tx:#e6e6f0;--mt:#666688;--fn:'IBM Plex Sans',sans-serif;--mo:'IBM Plex Mono',monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:var(--fn);min-height:100vh}
+body::before{content:'';position:fixed;top:-20vh;left:-10vw;width:70vw;height:70vh;background:radial-gradient(ellipse,rgba(0,229,160,.04) 0%,transparent 70%);pointer-events:none}
+
+header{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:1px solid var(--bd);background:rgba(8,8,16,.9);backdrop-filter:blur(10px);position:sticky;top:0;z-index:100}
+.logo{font-size:18px;font-weight:600;letter-spacing:-.04em}.logo span{color:var(--ac)}
+.logo-sub{font-size:10px;color:var(--mt);font-family:var(--mo)}
+.hdr-right{display:flex;gap:10px;align-items:center}
+.badge{font-family:var(--mo);font-size:11px;padding:4px 12px;border-radius:20px;border:1px solid var(--bd);color:var(--mt)}
+.btn{padding:9px 16px;border-radius:9px;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;font-family:var(--fn);display:inline-flex;align-items:center;gap:7px;border:1px solid transparent}
+.btn-primary{background:var(--ac);color:#080810}
+.btn-primary:hover{filter:brightness(1.1)}
+.btn-ghost{background:var(--s2);color:var(--tx);border-color:var(--bd)}
+.btn-ghost:hover{border-color:var(--ac);color:var(--ac)}
+.btn-sm{padding:6px 12px;font-size:11px;border-radius:7px}
+
+main{padding:28px 32px;max-width:1400px;margin:0 auto}
+.page-title{font-size:26px;font-weight:600;letter-spacing:-.04em;margin-bottom:3px}
+.page-sub{color:var(--mt);font-size:13px;margin-bottom:24px}
+
+/* STATS TOP */
+.stats-top{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:28px}
+.stat{background:var(--s);border:1px solid var(--bd);border-radius:12px;padding:16px 18px;transition:border-color .15s}
+.stat:hover{border-color:var(--ac3)}
+.stat-lbl{font-family:var(--mo);font-size:10px;color:var(--mt);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
+.stat-val{font-size:22px;font-weight:600;letter-spacing:-.03em}
+.stat-val.green{color:var(--ac)}
+
+/* SEGMENTOS GRID */
+.seg-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:28px}
+.seg-card{background:var(--s);border:1px solid var(--bd);border-radius:12px;padding:16px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.seg-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--cor)}
+.seg-card:hover{transform:translateY(-2px);border-color:var(--cor)}
+.seg-card.ativo{border-color:var(--cor);background:rgba(255,255,255,.03)}
+.seg-emoji{font-size:22px;margin-bottom:8px}
+.seg-label{font-size:12px;font-weight:500;margin-bottom:4px}
+.seg-count{font-size:20px;font-weight:600;letter-spacing:-.03em;color:var(--cor)}
+.seg-pct{font-size:10px;color:var(--mt);font-family:var(--mo)}
+.seg-cashback{font-size:10px;color:var(--mt);margin-top:6px;font-family:var(--mo)}
+
+/* PAINEL DETALHE */
+.detail-panel{background:var(--s);border:1px solid var(--bd);border-radius:12px;overflow:hidden;margin-bottom:20px;display:none}
+.detail-panel.show{display:block}
+.detail-header{padding:16px 22px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
+.detail-header-left{display:flex;align-items:center;gap:12px}
+.detail-emoji{font-size:24px}
+.detail-title{font-size:15px;font-weight:500}
+.detail-sub{font-size:12px;color:var(--mt);margin-top:2px}
+.detail-actions-list{padding:16px 22px;border-bottom:1px solid var(--bd)}
+.detail-actions-list h4{font-size:11px;font-family:var(--mo);color:var(--mt);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+.action-item{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;color:var(--mt)}
+.action-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:5px}
+
+/* MENSAGEM WHATSAPP */
+.msg-box{padding:16px 22px;border-bottom:1px solid var(--bd)}
+.msg-box h4{font-size:11px;font-family:var(--mo);color:var(--mt);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+.msg-preview{background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:14px;font-size:13px;color:var(--tx);line-height:1.6;white-space:pre-wrap;margin-bottom:10px}
+.msg-actions{display:flex;gap:8px}
+
+/* TABELA CLIENTES */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{padding:9px 20px;text-align:left;font-family:var(--mo);font-size:10px;color:var(--mt);text-transform:uppercase;letter-spacing:.1em;border-bottom:1px solid var(--bd);background:rgba(255,255,255,.01)}
+td{padding:11px 20px;font-size:13px;border-bottom:1px solid rgba(37,37,56,.4)}
+tr:last-child td{border:none}
+tr:hover td{background:rgba(255,255,255,.015)}
+.mono{font-family:var(--mo);font-size:12px;color:var(--mt)}
+.val-green{color:var(--ac);font-weight:600;font-family:var(--mo)}
+.score-pill{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;font-size:11px;font-weight:600;font-family:var(--mo)}
+.empty{text-align:center;padding:60px;color:var(--mt);font-size:13px}
+
+/* EXPORT BAR */
+.export-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;border-top:1px solid var(--bd)}
+.export-bar span{font-size:12px;color:var(--mt)}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--s);border:1px solid var(--bd);border-radius:10px;padding:12px 18px;font-size:13px;z-index:9999;transform:translateY(80px);opacity:0;transition:all .25s cubic-bezier(.34,1.56,.64,1)}
+.toast.show{transform:none;opacity:1}
+
+/* LOADING */
+.loading-overlay{position:fixed;inset:0;background:rgba(8,8,16,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9000;display:none}
+.loading-overlay.show{display:flex}
+.spinner{width:40px;height:40px;border:3px solid var(--bd);border-top-color:var(--ac);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-txt{color:var(--mt);font-size:13px}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">Cash<span>Flow</span> <span style="font-size:13px;color:var(--mt);font-weight:400">— Painel RFM</span></div>
+    <div class="logo-sub">powered by Almode API</div>
+  </div>
+  <div class="hdr-right">
+    <span class="badge" id="totalBadge">Carregando...</span>
+    <a href="index.html" class="btn btn-ghost btn-sm">← Voltar</a>
+    <button class="btn btn-primary btn-sm" onclick="exportarExcel()">📊 Exportar Excel</button>
+  </div>
+</header>
+
+<main>
+  <div class="page-title">Análise RFM</div>
+  <div class="page-sub">Segmentação automática de clientes por Recência, Frequência e Valor monetário</div>
+
+  <!-- STATS -->
+  <div class="stats-top">
+    <div class="stat"><div class="stat-lbl">Total Clientes</div><div class="stat-val" id="sTotalClientes">—</div></div>
+    <div class="stat"><div class="stat-lbl">Cashback Total</div><div class="stat-val green" id="sTotalCashback">—</div></div>
+    <div class="stat"><div class="stat-lbl">Ticket Médio</div><div class="stat-val" id="sTicketMedio">—</div></div>
+    <div class="stat"><div class="stat-lbl">Clientes em Risco</div><div class="stat-val" id="sEmRisco" style="color:#ffb340">—</div></div>
+    <div class="stat"><div class="stat-lbl">Clientes VIP</div><div class="stat-val" id="sVip" style="color:#00e5a0">—</div></div>
+  </div>
+
+  <!-- SEGMENTOS -->
+  <div class="seg-grid" id="segGrid"></div>
+
+  <!-- DETALHE DO SEGMENTO -->
+  <div class="detail-panel" id="detailPanel">
+    <div class="detail-header">
+      <div class="detail-header-left">
+        <div class="detail-emoji" id="dEmoji"></div>
+        <div>
+          <div class="detail-title" id="dTitle"></div>
+          <div class="detail-sub" id="dSub"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" onclick="exportarSegmento()">📋 Exportar segmento</button>
+        <button class="btn btn-ghost btn-sm" onclick="copiarMensagens()">💬 Copiar msgs WhatsApp</button>
+        <button class="btn btn-ghost btn-sm" onclick="fecharDetalhe()">✕ Fechar</button>
+      </div>
+    </div>
+
+    <!-- AÇÕES SUGERIDAS -->
+    <div class="detail-actions-list">
+      <h4>Ações sugeridas</h4>
+      <div id="dAcoes"></div>
+    </div>
+
+    <!-- MENSAGEM WHATSAPP -->
+    <div class="msg-box">
+      <h4>Mensagem WhatsApp — personalize e dispare</h4>
+      <div class="msg-preview" id="dMsg" contenteditable="true"></div>
+      <div class="msg-actions">
+        <button class="btn btn-primary btn-sm" onclick="copiarMensagens()">💬 Copiar todas as mensagens</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportarWhatsapp()">📱 Exportar lista para WhatsApp</button>
+      </div>
+    </div>
+
+    <!-- TABELA -->
+    <div class="export-bar">
+      <span id="dCount">0 clientes neste segmento</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="text" id="searchSeg" placeholder="Buscar..." oninput="filtrarTabela(this.value)"
+          style="padding:6px 10px;background:var(--s2);border:1px solid var(--bd);border-radius:7px;color:var(--tx);font-size:12px;outline:none;width:180px">
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>CPF</th>
+            <th>Total Compras</th>
+            <th>Cashback</th>
+            <th>Nº Compras</th>
+            <th>R</th><th>F</th><th>M</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody id="clientesTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-txt" id="loadingTxt">Calculando RFM...</div>
+</div>
+
+<script type="module">
+import { calcularRFM, resumoPorSegmento, SEGMENTOS } from './src/js/rfm.js'
+
+let todosClientes = []
+let clientesRFM = []
+let segmentoAtivo = null
+let clientesSegmento = []
+
+const ACOES = {
+  campiao:         ['Ofereça cashback VIP exclusivo (8%+)', 'Convide para lançamentos antes do público', 'Programe de indicação "indique e ganhe"', 'Envie brindes surpresa para fidelizar'],
+  leal:            ['Aumente o cashback para 6-7% como recompensa', 'Crie clube de benefícios exclusivo', 'Ofereça condições especiais de pagamento'],
+  novo:            ['Boas-vindas com cashback extra na 2ª compra', 'Apresente toda a linha de produtos', 'Frete grátis ou desconto na próxima visita'],
+  potencial:       ['Cashback progressivo (mais compras = mais %)', 'Produtos complementares ao que comprou', 'Senso de urgência com ofertas por tempo limitado'],
+  promissor:       ['Incentive a 2ª compra com desconto especial', 'Mostre os produtos mais populares', 'Cashback como gatilho para retorno'],
+  em_risco:        ['Oferta de reativação URGENTE (48h)', 'Cashback extra por tempo limitado', 'Pergunte o motivo do afastamento', 'Condição especial para voltar'],
+  precisa_atencao: ['Campanha de reengajamento com oferta agressiva', 'Desconto + cashback combinados', 'Comunicação personalizada com produtos do interesse'],
+  nao_pode_perder: ['PRIORIDADE — contato pessoal do vendedor', 'Oferta exclusiva e personalizada', 'Cashback especial de reativação (10%)', 'Descubra o motivo do abandono'],
+  hibernando:      ['Campanha "sentimos sua falta"', 'Oferta de choque para reativar', 'Se não responder, reveja estratégia'],
+  perdido:         ['Tentativa final com oferta máxima', 'Se não retornar, foque em outros segmentos']
+}
+
+// Boot
+;(function() {
+  const raw = localStorage.getItem('cf_clientes_v2')
+  if (!raw) { showToast('Sincronize primeiro no painel principal'); return }
+  const parsed = JSON.parse(raw)
+  todosClientes = parsed.clientes || parsed || []
+  if (!todosClientes.length) { showToast('Nenhum cliente encontrado'); return }
+  showLoading('Calculando RFM...')
+  setTimeout(() => {
+    clientesRFM = calcularRFM(todosClientes)
+    renderStats()
+    renderSegGrid()
+    hideLoading()
+  }, 100)
+})()
+
+function renderStats() {
+  const total = clientesRFM.length
+  const cashback = clientesRFM.reduce((s,c)=>s+(c.cashback||0),0)
+  const ticket = total ? clientesRFM.reduce((s,c)=>s+(c.totalCompras||0),0)/total : 0
+  const emRisco = clientesRFM.filter(c=>['em_risco','nao_pode_perder','hibernando'].includes(c.segmento)).length
+  const vip = clientesRFM.filter(c=>['campiao','leal'].includes(c.segmento)).length
+
+  setText('sTotalClientes', total)
+  setText('sTotalCashback', 'R$ '+fmt(cashback))
+  setText('sTicketMedio', 'R$ '+fmt(ticket))
+  setText('sEmRisco', emRisco)
+  setText('sVip', vip)
+  setText('totalBadge', total+' clientes')
+}
+
+function renderSegGrid() {
+  const grupos = resumoPorSegmento(clientesRFM)
+  const total = clientesRFM.length
+  const grid = document.getElementById('segGrid')
+  const ordem = ['campiao','leal','novo','potencial','promissor','em_risco','precisa_atencao','nao_pode_perder','hibernando','perdido']
+  grid.innerHTML = ordem.map(seg => {
+    const s = SEGMENTOS[seg]
+    const g = grupos[seg] || { clientes:[] }
+    const n = g.clientes.length
+    const pct = total ? Math.round(n/total*100) : 0
+    const cash = g.totalCashback || 0
+    return `<div class="seg-card" style="--cor:${s.cor}" onclick="abrirSegmento('${seg}')" id="seg-${seg}">
+      <div class="seg-emoji">${s.emoji}</div>
+      <div class="seg-label">${s.label}</div>
+      <div class="seg-count">${n}</div>
+      <div class="seg-pct">${pct}% dos clientes</div>
+      <div class="seg-cashback">R$ ${fmt(cash)} em cashback</div>
+    </div>`
+  }).join('')
+}
+
+window.abrirSegmento = function(seg) {
+  segmentoAtivo = seg
+  const s = SEGMENTOS[seg]
+  const grupos = resumoPorSegmento(clientesRFM)
+  clientesSegmento = (grupos[seg]||{clientes:[]}).clientes
+
+  document.querySelectorAll('.seg-card').forEach(c=>c.classList.remove('ativo'))
+  document.getElementById('seg-'+seg)?.classList.add('ativo')
+
+  setText('dEmoji', s.emoji)
+  setText('dTitle', s.label)
+  setText('dCount', clientesSegmento.length + ' clientes neste segmento')
+
+  const descricoes = {
+    campiao:'Compraram recentemente, com frequência e gastam muito — seus melhores clientes',
+    leal:'Compram com frequência e recentemente — clientes valiosos e consistentes',
+    novo:'Compraram recentemente mas ainda poucas vezes — grande potencial',
+    potencial:'Recentes com frequência razoável — em caminho para se tornarem leais',
+    promissor:'Compraram recentemente mas poucas vezes — precisam de incentivo',
+    em_risco:'Costumavam comprar bem mas sumiram — risco de perda iminente',
+    precisa_atencao:'Baixa recência e frequência — precisam de reengajamento',
+    nao_pode_perder:'Compravam muito mas sumiram — alto valor em risco',
+    hibernando:'Última compra foi há muito tempo — em estado de inatividade',
+    perdido:'Muito tempo sem comprar e baixa frequência — difíceis de recuperar'
+  }
+  setText('dSub', descricoes[seg]||'')
+
+  // Ações
+  const acoes = ACOES[seg]||[]
+  document.getElementById('dAcoes').innerHTML = acoes.map(a =>
+    `<div class="action-item"><div class="action-dot" style="background:${s.cor}"></div>${a}</div>`
+  ).join('')
+
+  // Mensagem WA
+  const loja = 'nossa loja'
+  const ex = clientesSegmento[0]?.nome || 'cliente'
+  const msg = s.msg.replace('{nome}', ex.split(' ')[0]).replace('{loja}', loja)
+  document.getElementById('dMsg').textContent = msg
+
+  renderTabela(clientesSegmento)
+  document.getElementById('detailPanel').classList.add('show')
+  document.getElementById('detailPanel').scrollIntoView({behavior:'smooth', block:'start'})
+}
+
+function renderTabela(lista) {
+  const tbody = document.getElementById('clientesTbody')
+  if (!lista.length) {
+    tbody.innerHTML = '<tr><td colspan="9"><div class="empty">Nenhum cliente neste segmento</div></td></tr>'
+    return
+  }
+  const sorted = [...lista].sort((a,b)=>(b.totalCompras||0)-(a.totalCompras||0))
+  tbody.innerHTML = sorted.map(c => {
+    const scoreColor = c.rfm >= 12 ? '#00e5a0' : c.rfm >= 8 ? '#ffb340' : '#e24b4a'
+    return `<tr>
+      <td>${esc(c.nome)}</td>
+      <td class="mono">${fmtCpf(c.cpf)}</td>
+      <td class="mono">R$ ${fmt(c.totalCompras||0)}</td>
+      <td class="val-green">R$ ${fmt(c.cashback||0)}</td>
+      <td class="mono">${c.qtdVendas||0}x</td>
+      <td><span class="score-pill" style="background:rgba(0,229,160,.1);color:#00e5a0">${c.r}</span></td>
+      <td><span class="score-pill" style="background:rgba(124,111,255,.1);color:#a09eff">${c.f}</span></td>
+      <td><span class="score-pill" style="background:rgba(255,179,64,.1);color:#ffb340">${c.m}</span></td>
+      <td><span class="score-pill" style="background:rgba(255,255,255,.05);color:${scoreColor}">${c.rfm}</span></td>
+    </tr>`
+  }).join('')
+}
+
+window.filtrarTabela = function(q) {
+  const term = q.toLowerCase()
+  const filtrado = clientesSegmento.filter(c =>
+    c.nome.toLowerCase().includes(term) || (c.cpf||'').includes(term.replace(/\D/g,''))
+  )
+  renderTabela(filtrado)
+}
+
+window.fecharDetalhe = function() {
+  document.getElementById('detailPanel').classList.remove('show')
+  document.querySelectorAll('.seg-card').forEach(c=>c.classList.remove('ativo'))
+  segmentoAtivo = null
+}
+
+// EXPORTAR EXCEL (CSV que o Excel abre)
+window.exportarExcel = function() {
+  const rows = [['Nome','CPF','Segmento','Total Compras','Cashback','Nº Compras','Score R','Score F','Score M','Score Total']]
+  for (const c of clientesRFM) {
+    const s = SEGMENTOS[c.segmento]
+    rows.push([c.nome, fmtCpf(c.cpf), s?.label||c.segmento,
+      (c.totalCompras||0).toFixed(2), (c.cashback||0).toFixed(2),
+      c.qtdVendas||0, c.r, c.f, c.m, c.rfm])
+  }
+  baixarCSV(rows, 'cashflow-rfm-completo.csv')
+  showToast('✅ Excel exportado!')
+}
+
+window.exportarSegmento = function() {
+  if (!segmentoAtivo) return
+  const s = SEGMENTOS[segmentoAtivo]
+  const rows = [['Nome','CPF','Total Compras','Cashback','Nº Compras','Score RFM']]
+  for (const c of clientesSegmento) {
+    rows.push([c.nome, fmtCpf(c.cpf), (c.totalCompras||0).toFixed(2), (c.cashback||0).toFixed(2), c.qtdVendas||0, c.rfm])
+  }
+  baixarCSV(rows, `cashflow-${segmentoAtivo}.csv`)
+  showToast('✅ Segmento exportado!')
+}
+
+// EXPORTAR WHATSAPP — CSV com nome, telefone e mensagem personalizada
+window.exportarWhatsapp = function() {
+  if (!segmentoAtivo) return
+  const s = SEGMENTOS[segmentoAtivo]
+  const template = document.getElementById('dMsg').textContent
+  const loja = 'nossa loja'
+  const rows = [['Nome','CPF','Telefone','Mensagem WhatsApp']]
+  for (const c of clientesSegmento) {
+    const msg = s.msg
+      .replace('{nome}', c.nome.split(' ')[0])
+      .replace('{loja}', loja)
+    rows.push([c.nome, fmtCpf(c.cpf), c.telefone||'', msg])
+  }
+  baixarCSV(rows, `whatsapp-${segmentoAtivo}.csv`)
+  showToast('✅ Lista WhatsApp exportada!')
+}
+
+window.copiarMensagens = function() {
+  if (!segmentoAtivo) return
+  const s = SEGMENTOS[segmentoAtivo]
+  const loja = 'nossa loja'
+  const msgs = clientesSegmento.map(c => {
+    const nome = c.nome.split(' ')[0]
+    return `[${c.telefone||c.cpf}] ${s.msg.replace('{nome}',nome).replace('{loja}',loja)}`
+  }).join('\n\n')
+  navigator.clipboard.writeText(msgs).then(() => showToast('✅ '+clientesSegmento.length+' mensagens copiadas!'))
+}
+
+// UTILS
+function baixarCSV(rows, nome) {
+  const bom = '\uFEFF' // BOM para Excel reconhecer UTF-8
+  const csv = bom + rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(';')).join('\n')
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8'})
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = nome
+  a.click()
+}
+
+function fmt(n) { return Number(n).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) }
+function fmtCpf(v) {
+  const d=(v||'').replace(/\D/g,'')
+  if(d.length===11) return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4')
+  return v
+}
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;') }
+function setText(id,t) { const el=document.getElementById(id); if(el) el.textContent=t }
+function showToast(msg) {
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show')
+  setTimeout(()=>t.classList.remove('show'),3200)
+}
+function showLoading(txt) { document.getElementById('loadingTxt').textContent=txt; document.getElementById('loading').classList.add('show') }
+function hideLoading() { document.getElementById('loading').classList.remove('show') }
+</script>
+</body>
+</html>
