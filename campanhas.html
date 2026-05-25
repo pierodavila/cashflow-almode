@@ -131,10 +131,10 @@ main{padding:28px 32px;max-width:1300px;margin:0 auto}
 <header>
   <div>
     <div class="logo">Cash<span>Flow</span> <span style="font-size:13px;color:var(--mt);font-weight:400">— Campanhas</span></div>
-    <div class="logo-sub">SMS + WhatsApp via Zenvia</div>
+    <div class="logo-sub">SMS + WhatsApp · Zenvia ou BotConversa</div>
   </div>
   <div class="hdr-right">
-    <div class="badge" id="zenviaStatus">Zenvia: configurar</div>
+    <div class="badge" id="zenviaStatus">Plataforma: configurar</div>
     <a href="rfm.html" class="btn btn-ghost btn-sm">← RFM</a>
     <a href="index.html" class="btn btn-ghost btn-sm">🏠 Principal</a>
   </div>
@@ -145,7 +145,7 @@ main{padding:28px 32px;max-width:1300px;margin:0 auto}
     <div class="tab active" onclick="showTab('nova')">Nova Campanha</div>
     <div class="tab" onclick="showTab('historico')">Histórico</div>
     <div class="tab" onclick="showTab('gatilhos')">Gatilhos Automáticos</div>
-    <div class="tab" onclick="showTab('config')">Configuração Zenvia</div>
+    <div class="tab" onclick="showTab('config')">Configuração</div>
   </div>
 
   <!-- NOVA CAMPANHA -->
@@ -341,21 +341,39 @@ main{padding:28px 32px;max-width:1300px;margin:0 auto}
   <div class="tab-content" id="tab-config">
     <div class="config-grid">
       <div class="config-card">
-        <h3>🔑 Credenciais Zenvia</h3>
+        <h3>🔑 Plataforma de Envio</h3>
+        <div class="cf-group">
+          <label>Plataforma</label>
+          <select id="zPlataforma" onchange="alterarPlataforma()">
+            <option value="zenvia">Zenvia (SMS + WhatsApp)</option>
+            <option value="botconversa">BotConversa (WhatsApp)</option>
+          </select>
+        </div>
         <div class="cf-group">
           <label>API Key (Token)</label>
-          <input type="password" id="zApiKey" placeholder="sua-api-key-zenvia">
+          <input type="password" id="zApiKey" placeholder="sua-api-key">
+        </div>
+        <div id="configZenvia">
+          <div class="cf-group">
+            <label>Sender ID (SMS)</label>
+            <input type="text" id="zSenderId" placeholder="SWNOutlet">
+          </div>
+          <div class="cf-group">
+            <label>Número WhatsApp</label>
+            <input type="text" id="zNumWA" placeholder="5521999999999">
+          </div>
+        </div>
+        <div id="configBotConversa" style="display:none">
+          <div class="cf-group">
+            <label>Número WhatsApp BotConversa</label>
+            <input type="text" id="bcNumWA" placeholder="5521999999999">
+          </div>
+          <div style="background:var(--sms2);border:1px solid rgba(55,138,221,.2);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--sms);margin-bottom:10px">
+            ⚠️ BotConversa não tem SMS nativo. Para SMS, contrate créditos avulsos de outra operadora.
+          </div>
         </div>
         <div class="cf-group">
-          <label>Sender ID (SMS)</label>
-          <input type="text" id="zSenderId" placeholder="SWNOutlet">
-        </div>
-        <div class="cf-group">
-          <label>Número padrão WhatsApp</label>
-          <input type="text" id="zNumWA" placeholder="5521999999999">
-        </div>
-        <div class="cf-group">
-          <label>Número de teste (para envios de teste)</label>
+          <label>Número de teste</label>
           <input type="text" id="zNumTeste" placeholder="5521999999999">
         </div>
         <button class="btn btn-primary" onclick="salvarConfigZenvia()" style="width:100%;margin-top:4px">💾 Salvar</button>
@@ -419,10 +437,13 @@ let segsSelecionados = new Set()
 // Boot
 ;(function() {
   // Preenche config
+  if (cfg.plataforma) document.getElementById('zPlataforma').value = cfg.plataforma
   if (cfg.apiKey) document.getElementById('zApiKey').value = cfg.apiKey
   if (cfg.senderId) document.getElementById('zSenderId').value = cfg.senderId
   if (cfg.numWA) document.getElementById('zNumWA').value = cfg.numWA
+  if (cfg.bcNumWA) document.getElementById('bcNumWA').value = cfg.bcNumWA
   if (cfg.numTeste) document.getElementById('zNumTeste').value = cfg.numTeste
+  alterarPlataforma()
   if (cfg.numForum) document.getElementById('numForum').value = cfg.numForum
   if (cfg.numColcci) document.getElementById('numColcci').value = cfg.numColcci
   if (cfg.numTriton) document.getElementById('numTriton').value = cfg.numTriton
@@ -430,7 +451,8 @@ let segsSelecionados = new Set()
   // Status badge
   if (cfg.apiKey) {
     const b = document.getElementById('zenviaStatus')
-    b.textContent = 'Zenvia: conectado'
+    const plat = cfg.plataforma === 'botconversa' ? 'BotConversa' : 'Zenvia'
+    b.textContent = plat + ': conectado'
     b.classList.add('on')
   }
 
@@ -443,6 +465,24 @@ let segsSelecionados = new Set()
   const d = new Date(); d.setHours(d.getHours()+1)
   document.getElementById('campData').value = d.toISOString().slice(0,16)
 })()
+
+// PLATAFORMA
+function alterarPlataforma() {
+  const plat = document.getElementById('zPlataforma')?.value || cfg.plataforma || 'zenvia'
+  document.getElementById('configZenvia').style.display = plat === 'zenvia' ? 'block' : 'none'
+  document.getElementById('configBotConversa').style.display = plat === 'botconversa' ? 'block' : 'none'
+  // Oculta SMS nos canais se BotConversa
+  const smsToggle = document.getElementById('toggleSMS')
+  if (smsToggle) {
+    smsToggle.style.opacity = plat === 'botconversa' ? '.4' : '1'
+    smsToggle.style.pointerEvents = plat === 'botconversa' ? 'none' : 'auto'
+    smsToggle.title = plat === 'botconversa' ? 'SMS não disponível no BotConversa' : ''
+    if (plat === 'botconversa') {
+      canaisAtivos.sms = false
+      smsToggle.classList.remove('ativo')
+    }
+  }
+}
 
 // TABS
 function showTab(id) {
@@ -517,7 +557,7 @@ function inserirVar(v) {
 
 // CAMPANHA
 function criarCampanha() {
-  if (!cfg.apiKey) { showTab('config'); toast('⚠️ Configure a API Key da Zenvia primeiro'); return }
+  if (!cfg.apiKey) { showTab('config'); toast('⚠️ Configure a API Key primeiro'); return }
   const nome = document.getElementById('campNome').value
   const msg = document.getElementById('campMsg').value
   if (!nome) { toast('⚠️ Dê um nome à campanha'); return }
@@ -574,7 +614,7 @@ async function enviarCampanha(camp) {
     if (tel.length < 10) continue
 
     try {
-      if (camp.canais.includes('sms')) await enviarSMS(tel, msg)
+      if (camp.canais.includes('sms') && cfg.plataforma !== 'botconversa') await enviarSMS(tel, msg)
       if (camp.canais.includes('wa')) await enviarWA(tel, msg)
       enviados++
     } catch(e) { erros++ }
@@ -598,6 +638,7 @@ async function enviarCampanha(camp) {
 
 // API ZENVIA
 async function enviarSMS(tel, msg) {
+  // SMS só via Zenvia
   const r = await fetch('https://api.zenvia.com/v2/channels/sms/messages', {
     method: 'POST',
     headers: { 'X-API-Token': cfg.apiKey, 'Content-Type': 'application/json' },
@@ -611,17 +652,28 @@ async function enviarSMS(tel, msg) {
 }
 
 async function enviarWA(tel, msg) {
-  const from = cfg.numWA || ''
-  const r = await fetch('https://api.zenvia.com/v2/channels/whatsapp/messages', {
-    method: 'POST',
-    headers: { 'X-API-Token': cfg.apiKey, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      from,
-      to: '+55' + tel,
-      contents: [{ type: 'text', text: msg }]
+  if (cfg.plataforma === 'botconversa') {
+    // BotConversa API
+    const r = await fetch('https://backend.botconversa.com.br/api/v1/webhook/whatsapp/send-message/', {
+      method: 'POST',
+      headers: { 'API-KEY': cfg.apiKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: '55' + tel, message: msg })
     })
-  })
-  if (!r.ok) throw new Error('WA error ' + r.status)
+    if (!r.ok) throw new Error('BotConversa WA error ' + r.status)
+  } else {
+    // Zenvia API
+    const from = cfg.numWA || ''
+    const r = await fetch('https://api.zenvia.com/v2/channels/whatsapp/messages', {
+      method: 'POST',
+      headers: { 'X-API-Token': cfg.apiKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from,
+        to: '+55' + tel,
+        contents: [{ type: 'text', text: msg }]
+      })
+    })
+    if (!r.ok) throw new Error('WA error ' + r.status)
+  }
 }
 
 // TESTE
@@ -640,16 +692,27 @@ async function testarEnvio() {
 
 async function testarZenvia() {
   const key = document.getElementById('zApiKey').value
+  const plat = document.getElementById('zPlataforma').value
   if (!key) { toast('⚠️ Insira a API Key'); return }
   try {
-    const r = await fetch('https://api.zenvia.com/v2/subscriptions', {
-      headers: { 'X-API-Token': key }
-    })
-    if (r.ok || r.status === 404) {
-      toast('✅ Zenvia conectada!')
-      document.getElementById('zenviaStatus').textContent = 'Zenvia: conectado'
+    let ok = false
+    if (plat === 'botconversa') {
+      const r = await fetch('https://backend.botconversa.com.br/api/v1/webhook/whatsapp/', {
+        headers: { 'API-KEY': key }
+      })
+      ok = r.ok || r.status === 405
+    } else {
+      const r = await fetch('https://api.zenvia.com/v2/subscriptions', {
+        headers: { 'X-API-Token': key }
+      })
+      ok = r.ok || r.status === 404
+    }
+    const label = plat === 'botconversa' ? 'BotConversa' : 'Zenvia'
+    if (ok) {
+      toast('✅ ' + label + ' conectada!')
+      document.getElementById('zenviaStatus').textContent = label + ': conectado'
       document.getElementById('zenviaStatus').classList.add('on')
-    } else toast('❌ Erro: HTTP ' + r.status)
+    } else toast('❌ Erro de autenticação')
   } catch(e) { toast('❌ Não foi possível conectar') }
 }
 
@@ -734,9 +797,20 @@ function salvarGatilhos() {
 
 // CONFIG
 function salvarConfigZenvia() {
-  cfg = { apiKey: document.getElementById('zApiKey').value, senderId: document.getElementById('zSenderId').value, numWA: document.getElementById('zNumWA').value, numTeste: document.getElementById('zNumTeste').value }
+  cfg = {
+    plataforma: document.getElementById('zPlataforma').value,
+    apiKey: document.getElementById('zApiKey').value,
+    senderId: document.getElementById('zSenderId').value,
+    numWA: document.getElementById('zNumWA').value,
+    bcNumWA: document.getElementById('bcNumWA').value,
+    numTeste: document.getElementById('zNumTeste').value
+  }
   localStorage.setItem('cf_zenvia_cfg', JSON.stringify(cfg))
-  if (cfg.apiKey) { document.getElementById('zenviaStatus').textContent = 'Zenvia: conectado'; document.getElementById('zenviaStatus').classList.add('on') }
+  if (cfg.apiKey) {
+    const plat = cfg.plataforma === 'botconversa' ? 'BotConversa' : 'Zenvia'
+    document.getElementById('zenviaStatus').textContent = plat + ': conectado'
+    document.getElementById('zenviaStatus').classList.add('on')
+  }
   toast('✅ Configuração salva!')
 }
 
