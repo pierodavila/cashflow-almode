@@ -70,7 +70,7 @@ export async function onTestConexao() {
 export async function onSync() {
   const { config } = getState()
   if (!config.domain || !config.token) { toast('Configure domínio e token', 'warn'); return }
-  if (!config.cnpj) { toast('Configure o CNPJ da loja', 'warn'); return }
+
 
   setState({ syncStatus: 'syncing', syncProgress: 0, syncError: null })
   setDisabled('btnSync', true)
