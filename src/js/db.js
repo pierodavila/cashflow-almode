@@ -47,18 +47,18 @@ async function sb(path, options = {}) {
 
 // ─── CLIENTES ─────────────────────────────────────────────────────────────────
 export async function getClientes({ loja, limit = 10000 } = {}) {
-  let path = `clientes?select=*&order=cashback.desc&limit=${limit}`
+  let path = `cf_clientes?select=*&order=cashback.desc&limit=${limit}`
   if (loja) path += `&loja=eq.${encodeURIComponent(loja)}`
   return sb(path)
 }
 
 export async function getClientePorCpf(cpf) {
-  const data = await sb(`clientes?cpf=eq.${cpf}&select=*&limit=1`)
+  const data = await sb(`cf_clientes?cpf=eq.${cpf}&select=*&limit=1`)
   return data[0] || null
 }
 
 export async function upsertCliente(c) {
-  return sb('clientes', {
+  return sb('cf_clientes', {
     method: 'POST',
     prefer: 'resolution=merge-duplicates,return=representation',
     headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
@@ -93,7 +93,7 @@ export async function upsertClientesLote(clientes) {
       loja: c.loja || '—',
       lojas: c.lojas || {}
     }))
-    await sb('clientes', {
+    await sb('cf_clientes', {
       method: 'POST',
       headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
       prefer: 'resolution=merge-duplicates,return=minimal',
@@ -104,7 +104,7 @@ export async function upsertClientesLote(clientes) {
 
 export async function atualizarCashbackCliente(cpf, valorResgatado) {
   // Decrementa cashback e incrementa total_resgatado
-  return sb(`clientes?cpf=eq.${cpf}`, {
+  return sb(`cf_clientes?cpf=eq.${cpf}`, {
     method: 'PATCH',
     body: JSON.stringify({
       cashback: `cashback - ${valorResgatado}`,
@@ -115,7 +115,7 @@ export async function atualizarCashbackCliente(cpf, valorResgatado) {
 
 // ─── RESGATES ─────────────────────────────────────────────────────────────────
 export async function inserirResgate(r) {
-  return sb('resgates', {
+  return sb('cf_resgates', {
     method: 'POST',
     body: JSON.stringify({
       cpf: r.cpf,
@@ -133,25 +133,25 @@ export async function inserirResgate(r) {
 
 export async function getResgatesHoje(loja) {
   const inicio = new Date(); inicio.setHours(0,0,0,0)
-  let path = `resgates?select=*&order=created_at.desc&created_at=gte.${inicio.toISOString()}`
+  let path = `cf_resgates?select=*&order=created_at.desc&created_at=gte.${inicio.toISOString()}`
   if (loja) path += `&loja=eq.${encodeURIComponent(loja)}`
   return sb(path)
 }
 
 export async function getResgates({ loja, dias = 30, limit = 500 } = {}) {
   const inicio = new Date(); inicio.setDate(inicio.getDate() - dias)
-  let path = `resgates?select=*&order=created_at.desc&created_at=gte.${inicio.toISOString()}&limit=${limit}`
+  let path = `cf_resgates?select=*&order=created_at.desc&created_at=gte.${inicio.toISOString()}&limit=${limit}`
   if (loja) path += `&loja=eq.${encodeURIComponent(loja)}`
   return sb(path)
 }
 
 // ─── CAMPANHAS ────────────────────────────────────────────────────────────────
 export async function getCampanhas(limit = 100) {
-  return sb(`campanhas?select=*&order=created_at.desc&limit=${limit}`)
+  return sb(`cf_campanhas?select=*&order=created_at.desc&limit=${limit}`)
 }
 
 export async function inserirCampanha(c) {
-  return sb('campanhas', {
+  return sb('cf_campanhas', {
     method: 'POST',
     body: JSON.stringify({
       nome: c.nome,
@@ -168,7 +168,7 @@ export async function inserirCampanha(c) {
 }
 
 export async function atualizarCampanha(id, updates) {
-  return sb(`campanhas?id=eq.${id}`, {
+  return sb(`cf_campanhas?id=eq.${id}`, {
     method: 'PATCH',
     body: JSON.stringify(updates)
   })
@@ -225,7 +225,7 @@ export async function migrarLocalStorage(onProgress) {
       lojas: c.lojas || {}
     }))
 
-    await sb('clientes', {
+    await sb('cf_clientes', {
       method: 'POST',
       headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
       prefer: 'resolution=merge-duplicates,return=minimal',
@@ -253,7 +253,7 @@ export async function migrarLocalStorage(onProgress) {
         valor_compra: r.valorCompra,
         created_at: r.data || new Date().toISOString()
       }))
-      await sb('resgates', {
+      await sb('cf_resgates', {
         method: 'POST',
         headers: { 'Prefer': 'return=minimal' },
         prefer: 'return=minimal',
