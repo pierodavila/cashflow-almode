@@ -401,14 +401,20 @@ const AutoSync = {
     const cfg = AutoSync.getCfg()
     AutoSync.atualizarBadge()
 
-    if (!cfg.domain || !cfg.token) return // Sem config, não sincroniza
+    if (!cfg.domain || !cfg.token) {
+      // Tenta ler localStorage novamente (talvez tenha sido atualizado)
+      const salva = localStorage.getItem('cf_almode_cfg')
+      if (!salva) return
+      Object.assign(cfg, JSON.parse(salva))
+      if (!cfg.domain || !cfg.token) return
+    }
 
     const ultimaSync = localStorage.getItem('cf_sync_last_auto')
     const agora = Date.now()
     const diffHoras = ultimaSync ? (agora - parseInt(ultimaSync)) / 3600000 : 999
 
     if (diffHoras >= AutoSync.INTERVALO_HORAS) {
-      console.log('[AutoSync] Iniciando sync incremental automático...')
+      console.log('[AutoSync] Iniciando sync incremental automático...'); localStorage.setItem('cf_sync_last_auto', Date.now().toString())
       await AutoSync.rodarIncremental()
     } else {
       const proxima = new Date(parseInt(ultimaSync) + AutoSync.INTERVALO_HORAS * 3600000)
@@ -540,6 +546,11 @@ const AutoSync = {
 
   // Força sync completa manualmente
   async forcarSync() {
+    // Salva config para AutoSync usar depois
+    const cfg = this.getCfg()
+    if (cfg.domain && cfg.token) {
+      localStorage.setItem('cf_almode_cfg', JSON.stringify(cfg))
+    }
     if (AutoSync.rodando) return
     const cfg = AutoSync.getCfg()
     if (!cfg.domain || !cfg.token) {
@@ -599,6 +610,8 @@ const AutoSync = {
       await new Promise(r => setTimeout(r, 100))
     }
     console.log('[AutoSync] Supabase upsert concluído:', clientes.length, 'clientes')
+      // Salva config para próxima sync automática
+      localStorage.setItem('cf_sync_last_auto', Date.now().toString())
   },
 
   async upsertVendedores(vendedoresMap, sbCfg) {
@@ -699,6 +712,20 @@ const AutoSync = {
 
 // Exporta para uso global
 window.AutoSync = AutoSync
+
+// Compartilha token entre abas do mesmo domínio
+const shareToken = setInterval(() => {
+  const token = sessionStorage.getItem('JWT_TOKEN') || localStorage.getItem('JWT_TOKEN')
+  if (token && !localStorage.getItem('cf_almode_cfg_token')) {
+    const cfg = JSON.parse(localStorage.getItem('cf_almode_cfg') || '{}')
+    cfg.domain = 'swn.almode.store'
+    cfg.token = token
+    cfg.pct = 5
+    localStorage.setItem('cf_almode_cfg', JSON.stringify(cfg))
+    clearInterval(shareToken)
+    console.log('[AutoSync] Config preenchida com token')
+  }
+}, 500)
 
 // Inicia após 2 segundos (deixa o app carregar primeiro)
 setTimeout(() => AutoSync.init(), 2000)
