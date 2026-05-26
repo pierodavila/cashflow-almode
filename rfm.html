@@ -225,12 +225,14 @@ const ACOES = {
 }
 
 // Boot
-;(function() {
-  const raw = localStorage.getItem('cf_clientes_v2')
-  if (!raw) { showToast('Sincronize primeiro no painel principal'); return }
-  const parsed = JSON.parse(raw)
-  todosClientes = parsed.clientes || parsed || []
-  if (!todosClientes.length) { showToast('Nenhum cliente encontrado'); return }
+;(async function() {
+  showLoading('Carregando clientes...')
+  todosClientes = await carregarClientes()
+  if (!todosClientes.length) {
+    hideLoading()
+    showToast('Nenhum cliente encontrado. Sincronize primeiro.')
+    return
+  }
   showLoading('Calculando RFM...')
   setTimeout(() => {
     clientesFiltrados = todosClientes
@@ -240,6 +242,48 @@ const ACOES = {
     hideLoading()
   }, 100)
 })()
+
+async function carregarClientes() {
+  const sbCfg = JSON.parse(localStorage.getItem('cf_supabase_cfg') || '{}')
+  if (sbCfg.url && sbCfg.anonKey) {
+    try {
+      showLoading('Carregando do Supabase...')
+      const clientes = []
+      let from = 0
+      const pageSize = 1000
+      while (true) {
+        const r = await fetch(
+          `${sbCfg.url}/rest/v1/cf_clientes?select=*&order=cashback.desc&limit=${pageSize}&offset=${from}`,
+          { headers: { 'apikey': sbCfg.anonKey, 'Authorization': `Bearer ${sbCfg.anonKey}` } }
+        )
+        if (!r.ok) break
+        const page = await r.json()
+        if (!page.length) break
+        clientes.push(...page.map(mapSb))
+        if (page.length < pageSize) break
+        from += pageSize
+      }
+      if (clientes.length) {
+        console.log('[RFM] Supabase:', clientes.length, 'clientes')
+        return clientes
+      }
+    } catch(e) { console.warn('[RFM] Supabase falhou, usando localStorage:', e) }
+  }
+  // Fallback localStorage
+  const raw = localStorage.getItem('cf_clientes_v2')
+  const parsed = raw ? JSON.parse(raw) : null
+  return parsed?.clientes || parsed || []
+}
+
+function mapSb(c) {
+  return {
+    cpf: c.cpf, nome: c.nome,
+    totalCompras: c.total_compras, cashback: c.cashback,
+    totalResgatado: c.total_resgatado, qtdVendas: c.qtd_vendas,
+    telefone: c.telefone, ultimaCompra: c.ultima_compra,
+    loja: c.loja, lojas: c.lojas
+  }
+}
 
 function renderStats() {
   const total = clientesRFM.length
