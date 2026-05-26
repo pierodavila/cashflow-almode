@@ -254,28 +254,31 @@ main{padding:28px 32px;max-width:1300px;margin:0 auto}
 
     <div class="gatilho-card">
       <div class="gatilho-header">
-        <h4>😴 Cliente sem comprar há X dias</h4>
+        <h4>🛍️ Pós-venda — 7 dias após a compra</h4>
         <div class="toggle-wrap">
           <div class="toggle" id="g1toggle" onclick="toggleGatilho('g1')"></div>
           <span class="toggle-lbl" id="g1lbl">Desativado</span>
         </div>
       </div>
+      <div style="font-size:12px;color:var(--mt);margin-bottom:12px;line-height:1.5">
+        Enviado automaticamente X dias após a última compra do cliente. Ideal para confirmar satisfação e lembrar do cashback acumulado.
+      </div>
       <div class="gatilho-body">
         <div class="cf-group">
-          <label>Dias sem comprar</label>
-          <input type="number" id="g1dias" value="30" min="1">
+          <label>Dias após a compra</label>
+          <input type="number" id="g1dias" value="7" min="1">
         </div>
         <div class="cf-group">
           <label>Canal</label>
           <select id="g1canal">
-            <option value="sms">SMS</option>
+            <option value="sms" selected>SMS</option>
             <option value="whatsapp">WhatsApp</option>
             <option value="ambos">SMS + WhatsApp</option>
           </select>
         </div>
         <div class="cf-group">
           <label>Mensagem</label>
-          <input type="text" id="g1msg" value="Oi {nome}! Sentimos sua falta na {loja}. Seu cashback de R$ {cashback} está esperando! 🎁">
+          <input type="text" id="g1msg" value="Oi {nome}! Esperamos que tenha gostado da sua compra na {loja}. Você acumulou R$ {cashback} em cashback disponível para sua próxima visita!">
         </div>
       </div>
     </div>
@@ -768,7 +771,9 @@ function toggleGatilho(id) {
 }
 
 function renderGatilhos() {
-  if (gatilhos.g1) document.getElementById('g1toggle').classList.add('on'), document.getElementById('g1lbl').textContent='Ativado'
+  // G1 ativo por padrão (pós-venda 7 dias)
+  const g1ativo = gatilhos.g1 !== undefined ? gatilhos.g1 : true
+  if (g1ativo) document.getElementById('g1toggle').classList.add('on'), document.getElementById('g1lbl').textContent='Ativado'
   if (gatilhos.g2) document.getElementById('g2toggle').classList.add('on'), document.getElementById('g2lbl').textContent='Ativado'
   if (gatilhos.g3) document.getElementById('g3toggle').classList.add('on'), document.getElementById('g3lbl').textContent='Ativado'
   if (gatilhos.g1dias) document.getElementById('g1dias').value = gatilhos.g1dias
