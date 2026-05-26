@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CashFlow — Painel da Loja</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080810;--s:#10101a;--s2:#18182a;--bd:#252538;--ac:#00e5a0;--ac2:rgba(0,229,160,.1);--ac3:rgba(0,229,160,.2);--wa:#25d366;--wa2:rgba(37,211,102,.1);--tx:#e6e6f0;--mt:#666688;--fn:'IBM Plex Sans',sans-serif;--mo:'IBM Plex Mono',monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:var(--fn);min-height:100vh}
+
+/* LOGIN */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{background:var(--s);border:1px solid var(--bd);border-radius:16px;padding:36px;width:100%;max-width:400px;text-align:center}
+.login-logo{font-size:22px;font-weight:600;letter-spacing:-.04em;margin-bottom:4px}.login-logo span{color:var(--ac)}
+.login-sub{font-size:12px;color:var(--mt);margin-bottom:28px}
+.login-lbl{font-family:var(--mo);font-size:10px;color:var(--mt);display:block;margin-bottom:5px;text-align:left;text-transform:uppercase;letter-spacing:.08em}
+.login-sel{width:100%;padding:11px 13px;background:var(--s2);border:1px solid var(--bd);border-radius:10px;color:var(--tx);font-size:14px;font-family:var(--fn);outline:none;margin-bottom:14px;cursor:pointer}
+.login-sel:focus{border-color:var(--ac)}
+.login-btn{width:100%;padding:13px;background:var(--ac);color:#080810;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--fn);transition:all .15s}
+.login-btn:hover{filter:brightness(1.1)}
+
+/* APP */
+.app{display:none}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid var(--bd);background:rgba(8,8,16,.95);backdrop-filter:blur(10px);position:sticky;top:0;z-index:100}
+.logo{font-size:16px;font-weight:600;letter-spacing:-.04em}.logo span{color:var(--ac)}
+.loja-badge{font-size:12px;padding:4px 12px;border-radius:20px;background:var(--ac2);border:1px solid var(--ac3);color:var(--ac);font-family:var(--mo)}
+.hdr-right{display:flex;gap:8px;align-items:center}
+.btn{padding:8px 14px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--fn);border:1px solid transparent;transition:all .15s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn-ghost{background:var(--s2);color:var(--tx);border-color:var(--bd)}.btn-ghost:hover{border-color:var(--ac);color:var(--ac)}
+
+main{padding:20px 24px;max-width:1200px;margin:0 auto}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.stat{background:var(--s);border:1px solid var(--bd);border-radius:10px;padding:14px 16px}
+.stat-lbl{font-family:var(--mo);font-size:10px;color:var(--mt);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.stat-val{font-size:20px;font-weight:600;letter-spacing:-.03em}
+.stat-val.green{color:var(--ac)}
+
+/* FILTROS */
+.filtros{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.seg-chip{padding:5px 12px;border-radius:16px;border:1px solid var(--bd);font-size:11px;cursor:pointer;color:var(--mt);background:var(--s2);transition:all .15s;white-space:nowrap}
+.seg-chip.sel{color:var(--tx);border-color:var(--ac);background:var(--ac2)}
+.search-inp{padding:7px 11px;background:var(--s2);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-size:12px;font-family:var(--mo);outline:none;width:180px;margin-left:auto}
+.search-inp:focus{border-color:var(--ac)}
+.count-lbl{font-size:12px;color:var(--mt)}
+
+/* LISTA */
+.cliente-list{display:flex;flex-direction:column;gap:8px}
+.cliente-card{background:var(--s);border:1px solid var(--bd);border-radius:10px;padding:14px 16px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;transition:border-color .15s}
+.cliente-card:hover{border-color:var(--bd)}
+.cliente-card.contatado{opacity:.55}
+.cliente-info{}
+.cli-nome{font-size:14px;font-weight:500;margin-bottom:2px}
+.cli-meta{font-size:11px;color:var(--mt);font-family:var(--mo);display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.cli-seg{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 8px;border-radius:8px;font-family:var(--mo)}
+.cli-cashback{font-size:13px;font-weight:500;color:var(--ac)}
+.cli-actions{display:flex;gap:7px;align-items:center}
+.btn-wa{padding:9px 16px;background:var(--wa2);color:var(--wa);border:1px solid rgba(37,211,102,.3);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--fn);transition:all .15s;text-decoration:none;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn-wa:hover{background:rgba(37,211,102,.2)}
+.btn-ok{padding:9px 12px;background:var(--s2);color:var(--mt);border:1px solid var(--bd);border-radius:8px;font-size:12px;cursor:pointer;font-family:var(--fn);transition:all .15s;white-space:nowrap}
+.btn-ok:hover{border-color:var(--ac);color:var(--ac)}
+.btn-ok.done{background:var(--ac2);border-color:var(--ac3);color:var(--ac)}
+.sem-tel{font-size:10px;color:var(--mt);font-family:var(--mo);padding:7px 10px;background:var(--s2);border-radius:7px}
+
+/* MENSAGEM PREVIEW */
+.msg-preview-wrap{display:none;margin-top:10px;grid-column:1/-1}
+.msg-preview{background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:11px 13px;font-size:13px;color:var(--tx);line-height:1.6;white-space:pre-wrap}
+.msg-edit-btn{font-size:10px;color:var(--mt);cursor:pointer;margin-top:5px;font-family:var(--mo)}
+.msg-edit-btn:hover{color:var(--ac)}
+
+/* EMPTY */
+.empty{text-align:center;padding:60px;color:var(--mt);font-size:13px}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--s);border:1px solid var(--bd);border-radius:10px;padding:11px 16px;font-size:13px;z-index:9999;transform:translateY(70px);opacity:0;transition:all .25s cubic-bezier(.34,1.56,.64,1)}
+.toast.show{transform:none;opacity:1}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-card">
+    <div class="login-logo">Cash<span>Flow</span></div>
+    <div class="login-sub">Painel da Loja — Contato com Clientes</div>
+    <label class="login-lbl">Selecione sua loja</label>
+    <select class="login-sel" id="loginLoja">
+      <option value="">— escolha a loja —</option>
+      <option value="FORUM OUTLET">FORUM OUTLET</option>
+      <option value="COLCCI OUTLET OPRJ">COLCCI OUTLET OPRJ</option>
+      <option value="TRITON OUTLET">TRITON OUTLET</option>
+    </select>
+    <label class="login-lbl">Seu nome (aparece no histórico)</label>
+    <input type="text" id="loginNome" placeholder="Ex: Fabiana" style="width:100%;padding:11px 13px;background:var(--s2);border:1px solid var(--bd);border-radius:10px;color:var(--tx);font-size:14px;font-family:var(--fn);outline:none;margin-bottom:20px">
+    <button class="login-btn" onclick="entrar()">Entrar →</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="appWrap">
+  <header>
+    <div>
+      <div class="logo">Cash<span>Flow</span></div>
+    </div>
+    <div class="hdr-right">
+      <span class="loja-badge" id="lojaBadge"></span>
+      <span style="font-size:12px;color:var(--mt)" id="operadorBadge"></span>
+      <button class="btn btn-ghost" onclick="sair()">Sair</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- STATS -->
+    <div class="stats">
+      <div class="stat"><div class="stat-lbl">Clientes</div><div class="stat-val" id="sTotalCli">—</div></div>
+      <div class="stat"><div class="stat-lbl">Cashback Total</div><div class="stat-val green" id="sCashback">—</div></div>
+      <div class="stat"><div class="stat-lbl">Contatados hoje</div><div class="stat-val green" id="sContatados">0</div></div>
+      <div class="stat"><div class="stat-lbl">Sem telefone</div><div class="stat-val" id="sSemTel">—</div></div>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="filtros">
+      <div class="seg-chip sel" onclick="filtrarSeg('', this)">Todos</div>
+      <div class="seg-chip" onclick="filtrarSeg('campiao', this)">🏆 Campeões</div>
+      <div class="seg-chip" onclick="filtrarSeg('leal', this)">⭐ Leais</div>
+      <div class="seg-chip" onclick="filtrarSeg('em_risco', this)">⚠️ Em Risco</div>
+      <div class="seg-chip" onclick="filtrarSeg('nao_pode_perder', this)">🆘 Não Pode Perder</div>
+      <div class="seg-chip" onclick="filtrarSeg('hibernando', this)">😴 Hibernando</div>
+      <div class="seg-chip" onclick="filtrarSeg('novo', this)">🌱 Novos</div>
+      <div class="seg-chip" onclick="filtrarSeg('precisa_atencao', this)">👀 Precisa Atenção</div>
+      <div class="seg-chip" onclick="filtrarSeg('sem_tel', this)">📵 Sem Tel</div>
+      <input class="search-inp" type="text" placeholder="Buscar nome ou CPF..." oninput="buscar(this.value)">
+    </div>
+    <div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+      <span class="count-lbl" id="countLbl"></span>
+      <button class="btn btn-ghost" style="font-size:11px" onclick="exportarLista()">📋 Exportar lista</button>
+    </div>
+
+    <!-- LISTA -->
+    <div class="cliente-list" id="clienteList"></div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SB_URL = 'https://gudhgyfaizueshafhqvc.supabase.co'
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZGhneWZhaXp1ZXNoYWZocXZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2ODgzNDksImV4cCI6MjA5NTI2NDM0OX0.LrUMZ6XnQFqvmDMn1n5vkdS5FIgTY8j-tnsMH_dtA08'
+
+const SEGMENTOS = {
+  campiao:         { label:'Campeões',        emoji:'🏆', cor:'#00e5a0', msg:'Olá {nome}! Você é um dos nossos clientes mais especiais no {loja}. Como forma de reconhecimento, seu cashback de R$ {cashback} está disponível e você tem benefícios exclusivos esperando por você! 🏆' },
+  leal:            { label:'Leal',            emoji:'⭐', cor:'#4fffb0', msg:'Oi {nome}! É sempre um prazer te ver no {loja}. Você tem R$ {cashback} em cashback acumulado disponível para usar na sua próxima visita. Venha nos ver! ⭐' },
+  novo:            { label:'Novo',            emoji:'🌱', cor:'#7c6fff', msg:'Olá {nome}! Que alegria ter você no {loja}! Você já acumulou R$ {cashback} em cashback na sua primeira compra. Use na próxima visita! 🎁' },
+  potencial:       { label:'Potencial Leal',  emoji:'💎', cor:'#a09eff', msg:'Oi {nome}! Você está quase no grupo VIP do {loja}! Tem R$ {cashback} em cashback esperando. Venha mais vezes e ganhe benefícios exclusivos! 💎' },
+  promissor:       { label:'Promissor',       emoji:'🚀', cor:'#85b7eb', msg:'Olá {nome}! Temos novidades incríveis no {loja} que vão te surpreender. Você tem R$ {cashback} em cashback disponível. Venha conferir! 🚀' },
+  em_risco:        { label:'Em Risco',        emoji:'⚠️', cor:'#ffb340', msg:'Oi {nome}, sentimos sua falta no {loja}! Preparamos uma oferta especial para você. Seu cashback de R$ {cashback} está esperando — válido por tempo limitado! ⚠️' },
+  precisa_atencao: { label:'Precisa Atenção', emoji:'👀', cor:'#ef9f27', msg:'Olá {nome}! Faz tempo que não te vemos no {loja}. Que tal uma visita? Você tem R$ {cashback} em cashback disponível para usar! 👀' },
+  nao_pode_perder: { label:'Não Pode Perder', emoji:'🆘', cor:'#f09595', msg:'{nome}, você é muito importante para o {loja}! Preparamos uma condição especial exclusiva para você. Seu cashback de R$ {cashback} está esperando. Podemos conversar? 🆘' },
+  hibernando:      { label:'Hibernando',      emoji:'😴', cor:'#e24b4a', msg:'Sentimos muito a sua falta, {nome}! O {loja} tem muitas novidades desde sua última visita. Seu cashback de R$ {cashback} ainda está disponível. Que tal dar uma passadinha? 😴' },
+  perdido:         { label:'Perdido',         emoji:'💀', cor:'#a32d2d', msg:'Olá {nome}! Tem um tempo que não nos vemos no {loja}. Gostaríamos muito de te receber novamente. Seu cashback de R$ {cashback} está esperando por você! 💀' }
+}
+
+let loja = ''
+let operador = ''
+let todos = []
+let filtrados = []
+let segFiltro = ''
+let buscaFiltro = ''
+let contatados = {}
+
+function entrar() {
+  loja = document.getElementById('loginLoja').value
+  operador = document.getElementById('loginNome').value.trim()
+  if (!loja) { toast('Selecione sua loja'); return }
+  if (!operador) { toast('Digite seu nome'); return }
+  document.getElementById('loginWrap').style.display = 'none'
+  document.getElementById('appWrap').style.display = 'block'
+  document.getElementById('lojaBadge').textContent = loja
+  document.getElementById('operadorBadge').textContent = operador
+  contatados = JSON.parse(localStorage.getItem('cf_contatados_' + loja) || '{}')
+  carregarClientes()
+}
+
+function sair() {
+  document.getElementById('loginWrap').style.display = 'flex'
+  document.getElementById('appWrap').style.display = 'none'
+  todos = []; filtrados = []
+}
+
+async function carregarClientes() {
+  document.getElementById('clienteList').innerHTML = '<div class="empty">Carregando clientes...</div>'
+  try {
+    // Supabase
+    const r = await fetch(`${SB_URL}/rest/v1/cf_clientes?loja=eq.${encodeURIComponent(loja)}&select=*&order=cashback.desc&limit=5000`, {
+      headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` }
+    })
+    if (r.ok) {
+      const data = await r.json()
+      todos = data.map(c => ({
+        cpf: c.cpf, nome: c.nome,
+        cashback: c.cashback, totalCompras: c.total_compras,
+        qtdVendas: c.qtd_vendas, telefone: c.telefone,
+        ultimaCompra: c.ultima_compra, loja: c.loja,
+        segmento: calcSegmento(c, data)
+      }))
+    }
+  } catch(e) {
+    // Fallback localStorage
+    const raw = localStorage.getItem('cf_clientes_v2')
+    const lista = raw ? (JSON.parse(raw).clientes||[]) : []
+    const daLoja = lista.filter(c => c.loja === loja)
+    todos = daLoja.map(c => ({ ...c, segmento: calcSegmento(c, daLoja) }))
+  }
+
+  renderStats()
+  aplicarFiltros()
+}
+
+// RFM simplificado por loja
+function calcSegmento(c, lista) {
+  const hoje = new Date()
+  const parseDate = str => {
+    if (!str) return new Date(0)
+    const m = str.match(/^(\d{2})-(\d{2})-(\d{4})$/)
+    if (m) return new Date(`${m[3]}-${m[2]}-${m[1]}`)
+    return new Date(str)
+  }
+  const dias = c.ultima_compra ? Math.floor((hoje - parseDate(c.ultima_compra)) / 86400000) : 999
+  const freq = c.qtd_vendas || c.qtdVendas || 0
+  const valor = c.total_compras || c.totalCompras || 0
+
+  // Quintis da lista atual
+  const allDias = lista.map(x => x.ultima_compra ? Math.floor((hoje - parseDate(x.ultima_compra)) / 86400000) : 999).sort((a,b)=>a-b)
+  const allFreq = lista.map(x => x.qtd_vendas||x.qtdVendas||0).sort((a,b)=>a-b)
+  const allValor = lista.map(x => x.total_compras||x.totalCompras||0).sort((a,b)=>a-b)
+
+  const rank = (arr, v) => { const idx = arr.indexOf(v); return Math.ceil((idx/arr.length)*5)||1 }
+  const r = 6 - rank(allDias, dias)
+  const f = rank(allFreq, freq)
+  const m = rank(allValor, valor)
+
+  if (r>=4&&f>=4&&m>=4) return 'campiao'
+  if (r>=4&&f>=3)       return 'leal'
+  if (r>=4&&f<=2)       return 'novo'
+  if (r===3&&f>=3)      return 'potencial'
+  if (r===3&&f<=2)      return 'promissor'
+  if (r===2&&f>=3)      return 'em_risco'
+  if (r===2&&f<=2)      return 'precisa_atencao'
+  if (r===1&&f>=3)      return 'nao_pode_perder'
+  if (r===1&&f<=2)      return 'hibernando'
+  return 'perdido'
+}
+
+function renderStats() {
+  const semTel = todos.filter(c => !c.telefone || c.telefone.length < 8).length
+  const cashTotal = todos.reduce((s,c)=>s+(c.cashback||0),0)
+  const hoje = new Date().toDateString()
+  const contHoje = Object.values(contatados).filter(d => new Date(d).toDateString()===hoje).length
+  document.getElementById('sTotalCli').textContent = todos.length
+  document.getElementById('sCashback').textContent = 'R$ ' + fmt(cashTotal)
+  document.getElementById('sContatados').textContent = contHoje
+  document.getElementById('sSemTel').textContent = semTel
+}
+
+function aplicarFiltros() {
+  filtrados = todos.filter(c => {
+    if (segFiltro === 'sem_tel') return !c.telefone || c.telefone.length < 8
+    if (segFiltro && c.segmento !== segFiltro) return false
+    if (buscaFiltro) {
+      const q = buscaFiltro.toLowerCase()
+      return (c.nome||'').toLowerCase().includes(q) || (c.cpf||'').includes(q.replace(/\D/g,''))
+    }
+    return true
+  })
+  document.getElementById('countLbl').textContent = filtrados.length + ' clientes'
+  renderLista()
+}
+
+function renderLista() {
+  const el = document.getElementById('clienteList')
+  if (!filtrados.length) { el.innerHTML = '<div class="empty">Nenhum cliente encontrado</div>'; return }
+
+  el.innerHTML = filtrados.map(c => {
+    const seg = SEGMENTOS[c.segmento] || { label: c.segmento||'—', emoji:'', cor:'#666', msg:'' }
+    const tel = (c.telefone||'').replace(/\D/g,'')
+    const temTel = tel.length >= 10
+    const chave = c.cpf + '_' + new Date().toDateString()
+    const jaContatado = !!contatados[c.cpf]
+    const msgRaw = seg.msg
+      .replace(/{nome}/g, (c.nome||'').split(' ')[0])
+      .replace(/{loja}/g, loja)
+      .replace(/{cashback}/g, 'R$ ' + fmt(c.cashback||0))
+    const msgEnc = encodeURIComponent(msgRaw)
+    const waLink = temTel ? `https://wa.me/55${tel}?text=${msgEnc}` : '#'
+    const ultima = c.ultimaCompra ? (() => {
+      const m = (c.ultimaCompra||'').match(/^(\d{2})-(\d{2})-(\d{4})$/)
+      return m ? new Date(`${m[3]}-${m[2]}-${m[1]}`).toLocaleDateString('pt-BR') : new Date(c.ultimaCompra).toLocaleDateString('pt-BR')
+    })() : '—'
+
+    return `<div class="cliente-card${jaContatado?' contatado':''}" id="card_${c.cpf}">
+      <div class="cliente-info">
+        <div class="cli-nome">${esc(c.nome)} <span class="cli-seg" style="background:${seg.cor}22;color:${seg.cor};border:1px solid ${seg.cor}44">${seg.emoji} ${seg.label}</span></div>
+        <div class="cli-meta">
+          <span>${fmtCpf(c.cpf)}</span>
+          <span>${c.qtdVendas||0}x compras</span>
+          <span>Última: ${ultima}</span>
+          ${!temTel ? '<span style="color:#e24b4a">Sem telefone</span>' : ''}
+        </div>
+        <div class="cli-cashback">R$ ${fmt(c.cashback||0)} em cashback</div>
+        <div class="msg-preview-wrap" id="msg_${c.cpf}">
+          <div class="msg-preview">${esc(msgRaw)}</div>
+          <div class="msg-edit-btn" onclick="event.stopPropagation();toggleMsg('${c.cpf}')">▲ fechar</div>
+        </div>
+      </div>
+      <div class="cli-actions">
+        ${temTel
+          ? `<div class="msg-edit-btn" style="font-size:11px;margin-right:4px" onclick="toggleMsg('${c.cpf}')">👁 ver msg</div>
+             <a class="btn-wa" href="${waLink}" target="_blank" onclick="marcarContatado('${c.cpf}')">
+               💬 WhatsApp
+             </a>`
+          : '<span class="sem-tel">📵 sem tel</span>'
+        }
+        <button class="btn-ok${jaContatado?' done':''}" onclick="marcarContatado('${c.cpf}')" title="${jaContatado?'Contatado':'Marcar como contatado'}">
+          ${jaContatado?'✓ Contatado':'✓'}
+        </button>
+      </div>
+    </div>`
+  }).join('')
+}
+
+function toggleMsg(cpf) {
+  const el = document.getElementById('msg_' + cpf)
+  if (!el) return
+  const isOpen = el.style.display === 'block'
+  document.querySelectorAll('.msg-preview-wrap').forEach(e => e.style.display = 'none')
+  if (!isOpen) el.style.display = 'block'
+}
+
+function marcarContatado(cpf) {
+  contatados[cpf] = new Date().toISOString()
+  localStorage.setItem('cf_contatados_' + loja, JSON.stringify(contatados))
+  const card = document.getElementById('card_' + cpf)
+  if (card) {
+    card.classList.add('contatado')
+    const btn = card.querySelector('.btn-ok')
+    if (btn) { btn.textContent = '✓ Contatado'; btn.classList.add('done') }
+  }
+  // Atualiza contador
+  const hoje = new Date().toDateString()
+  const contHoje = Object.values(contatados).filter(d => new Date(d).toDateString()===hoje).length
+  document.getElementById('sContatados').textContent = contHoje
+}
+
+function filtrarSeg(seg, el) {
+  segFiltro = seg
+  document.querySelectorAll('.seg-chip').forEach(c=>c.classList.remove('sel'))
+  el.classList.add('sel')
+  aplicarFiltros()
+}
+
+function buscar(q) { buscaFiltro = q; aplicarFiltros() }
+
+function exportarLista() {
+  const rows = [['Nome','CPF','Telefone','Segmento','Cashback','Última Compra','Contatado']]
+  for (const c of filtrados) {
+    const seg = SEGMENTOS[c.segmento]
+    const ultima = c.ultimaCompra ? new Date(c.ultimaCompra).toLocaleDateString('pt-BR') : '—'
+    rows.push([c.nome, fmtCpf(c.cpf), c.telefone||'', seg?.label||c.segmento, (c.cashback||0).toFixed(2), ultima, contatados[c.cpf]?'Sim':'Não'])
+  }
+  const bom = '\uFEFF'
+  const csv = bom + rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(';')).join('\n')
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download=`clientes-${loja.replace(/ /g,'-')}.csv`; a.click()
+  toast('✅ Lista exportada!')
+}
+
+function fmt(n){return Number(n).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function fmtCpf(v){const d=(v||'').replace(/\D/g,'');return d.length===11?d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4'):v}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+</script>
+</body>
+</html>
