@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>CashFlow — Vendedores</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080810;--s:#10101a;--s2:#18182a;--bd:#252538;--ac:#00e5a0;--ac2:rgba(0,229,160,.1);--ac3:rgba(0,229,160,.2);--tx:#e6e6f0;--mt:#666688;--fn:'IBM Plex Sans',sans-serif;--mo:'IBM Plex Mono',monospace;--gold:#f5c842;--gold2:rgba(245,200,66,.1)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:var(--fn);min-height:100vh}
+
+header{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:1px solid var(--bd);background:rgba(8,8,16,.9);backdrop-filter:blur(10px);position:sticky;top:0;z-index:100}
+.logo{font-size:18px;font-weight:600;letter-spacing:-.04em}.logo span{color:var(--ac)}
+.logo-sub{font-size:10px;color:var(--mt);font-family:var(--mo)}
+.hdr-right{display:flex;gap:10px}
+.btn{padding:9px 16px;border-radius:9px;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;font-family:var(--fn);display:inline-flex;align-items:center;gap:7px;border:1px solid transparent;text-decoration:none}
+.btn-ghost{background:var(--s2);color:var(--tx);border-color:var(--bd)}.btn-ghost:hover{border-color:var(--ac);color:var(--ac)}
+.btn-primary{background:var(--ac);color:#080810}.btn-primary:hover{filter:brightness(1.1)}
+.btn-sm{padding:6px 12px;font-size:11px;border-radius:7px}
+
+main{padding:28px 32px;max-width:1300px;margin:0 auto}
+
+/* STATS TOPO */
+.stats-top{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:28px}
+.stat{background:var(--s);border:1px solid var(--bd);border-radius:12px;padding:16px 18px}
+.stat-lbl{font-family:var(--mo);font-size:10px;color:var(--mt);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
+.stat-val{font-size:22px;font-weight:600;letter-spacing:-.03em}
+.stat-val.green{color:var(--ac)}.stat-val.gold{color:var(--gold)}
+
+/* FILTROS */
+.filtros{display:flex;gap:10px;margin-bottom:20px;align-items:center;flex-wrap:wrap}
+.filtro-loja{display:flex;gap:6px}
+.filtro-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--bd);font-size:12px;cursor:pointer;color:var(--mt);background:var(--s2);transition:all .15s}
+.filtro-btn.ativo{border-color:var(--ac);color:var(--ac);background:var(--ac2)}
+.search-inp{padding:8px 12px;background:var(--s2);border:1px solid var(--bd);border-radius:9px;color:var(--tx);font-size:12px;font-family:var(--mo);outline:none;width:200px}
+.search-inp:focus{border-color:var(--ac)}
+.sort-sel{padding:7px 11px;background:var(--s2);border:1px solid var(--bd);border-radius:9px;color:var(--tx);font-size:12px;font-family:var(--mo);outline:none;cursor:pointer}
+
+/* GRID DE CARDS */
+.vendedores-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:24px}
+.vend-card{background:var(--s);border:1px solid var(--bd);border-radius:12px;padding:18px;transition:border-color .15s;position:relative;overflow:hidden}
+.vend-card:hover{border-color:var(--ac3)}
+.vend-card.rank-1::before{content:'🥇';position:absolute;top:12px;right:14px;font-size:20px}
+.vend-card.rank-2::before{content:'🥈';position:absolute;top:12px;right:14px;font-size:20px}
+.vend-card.rank-3::before{content:'🥉';position:absolute;top:12px;right:14px;font-size:20px}
+.vend-avatar{width:44px;height:44px;border-radius:12px;background:var(--ac2);border:1px solid var(--ac3);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:var(--ac);margin-bottom:10px;font-family:var(--fn)}
+.vend-nome{font-size:14px;font-weight:500;margin-bottom:2px}
+.vend-loja{font-size:11px;color:var(--mt);font-family:var(--mo);margin-bottom:14px}
+.vend-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.vend-stat{background:var(--s2);border-radius:8px;padding:9px 11px}
+.vend-stat-lbl{font-size:10px;color:var(--mt);font-family:var(--mo);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.vend-stat-val{font-size:15px;font-weight:600;letter-spacing:-.02em}
+.vend-stat-val.green{color:var(--ac)}.vend-stat-val.gold{color:var(--gold)}
+.vend-ultima{font-size:10px;color:var(--mt);font-family:var(--mo);margin-top:10px;text-align:right}
+
+/* TABELA */
+.table-card{background:var(--s);border:1px solid var(--bd);border-radius:12px;overflow:hidden}
+.table-header{padding:14px 20px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
+.table-header h3{font-size:14px;font-weight:500}
+table{width:100%;border-collapse:collapse}
+th{padding:9px 18px;text-align:left;font-family:var(--mo);font-size:10px;color:var(--mt);text-transform:uppercase;letter-spacing:.1em;border-bottom:1px solid var(--bd);cursor:pointer;user-select:none}
+th:hover{color:var(--ac)}
+th.sorted{color:var(--ac)}
+td{padding:12px 18px;font-size:13px;border-bottom:1px solid rgba(37,37,56,.4)}
+tr:last-child td{border:none}
+tr:hover td{background:rgba(255,255,255,.015)}
+.mono{font-family:var(--mo);font-size:12px;color:var(--mt)}
+.val-green{color:var(--ac);font-weight:600;font-family:var(--mo)}
+.val-gold{color:var(--gold);font-weight:600;font-family:var(--mo)}
+.bar-wrap{width:80px;height:5px;background:var(--bd);border-radius:3px;display:inline-block;vertical-align:middle;margin-left:6px}
+.bar-fill{height:100%;border-radius:3px;background:var(--ac)}
+.loja-badge{font-size:10px;padding:2px 8px;border-radius:10px;font-family:var(--mo)}
+.loja-forum{background:rgba(124,111,255,.1);color:#a09eff}
+.loja-colcci{background:rgba(37,211,102,.1);color:#25d366}
+.loja-triton{background:rgba(255,179,64,.1);color:#ffb340}
+
+/* TOGGLE VIEW */
+.view-toggle{display:flex;gap:4px}
+.view-btn{padding:5px 10px;border-radius:7px;border:1px solid var(--bd);background:var(--s2);color:var(--mt);cursor:pointer;font-size:12px}
+.view-btn.ativo{border-color:var(--ac);color:var(--ac);background:var(--ac2)}
+
+.empty{text-align:center;padding:60px;color:var(--mt);font-size:13px}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--s);border:1px solid var(--bd);border-radius:10px;padding:12px 18px;font-size:13px;z-index:9999;transform:translateY(80px);opacity:0;transition:all .25s cubic-bezier(.34,1.56,.64,1)}
+.toast.show{transform:none;opacity:1}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="logo">Cash<span>Flow</span> <span style="font-size:13px;color:var(--mt);font-weight:400">— Performance de Vendedores</span></div>
+    <div class="logo-sub" id="ultimaSync">Carregando...</div>
+  </div>
+  <div class="hdr-right">
+    <a href="index.html" class="btn btn-ghost btn-sm">← Painel</a>
+    <button class="btn btn-primary btn-sm" onclick="exportarExcel()">📊 Exportar</button>
+  </div>
+</header>
+
+<main>
+  <!-- STATS -->
+  <div class="stats-top">
+    <div class="stat"><div class="stat-lbl">Vendedores</div><div class="stat-val" id="sTotalVend">—</div></div>
+    <div class="stat"><div class="stat-lbl">Total Vendas</div><div class="stat-val" id="sTotalVendas">—</div></div>
+    <div class="stat"><div class="stat-lbl">Volume Total</div><div class="stat-val green" id="sVolume">—</div></div>
+    <div class="stat"><div class="stat-lbl">Cashback Gerado</div><div class="stat-val green" id="sCashback">—</div></div>
+    <div class="stat"><div class="stat-lbl">Ticket Médio Geral</div><div class="stat-val gold" id="sTicket">—</div></div>
+  </div>
+
+  <!-- FILTROS -->
+  <div class="filtros">
+    <div class="filtro-loja">
+      <div class="filtro-btn ativo" onclick="filtrarLoja('', this)">Todas</div>
+      <div class="filtro-btn" onclick="filtrarLoja('FORUM OUTLET', this)">Forum</div>
+      <div class="filtro-btn" onclick="filtrarLoja('COLCCI OUTLET OPRJ', this)">Colcci</div>
+      <div class="filtro-btn" onclick="filtrarLoja('TRITON OUTLET', this)">Triton</div>
+    </div>
+    <input class="search-inp" type="text" placeholder="Buscar vendedor..." oninput="filtrarBusca(this.value)">
+    <select class="sort-sel" onchange="ordenar(this.value)">
+      <option value="total_valor">Ordenar por Volume</option>
+      <option value="total_vendas">Ordenar por Nº Vendas</option>
+      <option value="ticket_medio">Ordenar por Ticket Médio</option>
+      <option value="clientes_unicos">Ordenar por Clientes</option>
+      <option value="cashback_gerado">Ordenar por Cashback</option>
+    </select>
+    <div class="view-toggle" style="margin-left:auto">
+      <div class="view-btn ativo" onclick="setView('cards', this)">⊞ Cards</div>
+      <div class="view-btn" onclick="setView('tabela', this)">≡ Tabela</div>
+    </div>
+  </div>
+
+  <!-- CARDS VIEW -->
+  <div id="cardsView">
+    <div class="vendedores-grid" id="cardsGrid"></div>
+  </div>
+
+  <!-- TABELA VIEW -->
+  <div id="tabelaView" style="display:none">
+    <div class="table-card">
+      <div class="table-header">
+        <h3>Ranking de Vendedores</h3>
+        <span id="tabelaCount" style="font-size:12px;color:var(--mt)"></span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Vendedor</th>
+            <th>Loja</th>
+            <th onclick="ordenar('total_vendas')">Vendas</th>
+            <th onclick="ordenar('total_valor')">Volume</th>
+            <th onclick="ordenar('ticket_medio')">Ticket Médio</th>
+            <th onclick="ordenar('clientes_unicos')">Clientes</th>
+            <th onclick="ordenar('cashback_gerado')">Cashback Gerado</th>
+          </tr>
+        </thead>
+        <tbody id="tabelaBody"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SB_URL = 'https://gudhgyfaizueshafhqvc.supabase.co'
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZGhneWZhaXp1ZXNoYWZocXZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2ODgzNDksImV4cCI6MjA5NTI2NDM0OX0.LrUMZ6XnQFqvmDMn1n5vkdS5FIgTY8j-tnsMH_dtA08'
+
+let todos = []
+let filtrados = []
+let lojaFiltro = ''
+let buscaFiltro = ''
+let sortField = 'total_valor'
+let viewMode = 'cards'
+
+const LOJA_CLASS = {
+  'FORUM OUTLET': 'loja-forum',
+  'COLCCI OUTLET OPRJ': 'loja-colcci',
+  'TRITON OUTLET': 'loja-triton'
+}
+
+;(async function() {
+  // Tenta Supabase primeiro
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/cf_vendedores?select=*&order=total_valor.desc`, {
+      headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` }
+    })
+    if (r.ok) {
+      const data = await r.json()
+      if (data.length) {
+        todos = data
+        document.getElementById('ultimaSync').textContent = 'Dados do Supabase · ' + data.length + ' vendedores'
+        renderTudo()
+        return
+      }
+    }
+  } catch(e) {}
+
+  // Fallback localStorage
+  const local = localStorage.getItem('cf_vendedores')
+  if (local) {
+    todos = JSON.parse(local)
+    document.getElementById('ultimaSync').textContent = 'Dados locais · ' + todos.length + ' vendedores'
+    renderTudo()
+    return
+  }
+
+  document.getElementById('ultimaSync').textContent = 'Aguardando próxima sincronização...'
+  document.getElementById('cardsGrid').innerHTML = '<div class="empty">Nenhum dado ainda. Os vendedores aparecem automaticamente na próxima sincronização com o Almode (a cada hora).</div>'
+})()
+
+function renderTudo() {
+  aplicarFiltros()
+  renderStats()
+}
+
+function aplicarFiltros() {
+  filtrados = todos
+    .filter(v => !lojaFiltro || v.loja === lojaFiltro)
+    .filter(v => !buscaFiltro || v.nome.toLowerCase().includes(buscaFiltro.toLowerCase()))
+    .sort((a,b) => (b[sortField]||0) - (a[sortField]||0))
+  renderCards()
+  renderTabela()
+}
+
+function renderStats() {
+  const src = lojaFiltro ? filtrados : todos
+  setText('sTotalVend', src.length)
+  setText('sTotalVendas', src.reduce((s,v)=>s+(v.total_vendas||0),0))
+  setText('sVolume', 'R$ '+fmt(src.reduce((s,v)=>s+(v.total_valor||0),0)))
+  setText('sCashback', 'R$ '+fmt(src.reduce((s,v)=>s+(v.cashback_gerado||0),0)))
+  const totalVend = src.reduce((s,v)=>s+(v.total_vendas||0),0)
+  const totalVol = src.reduce((s,v)=>s+(v.total_valor||0),0)
+  setText('sTicket', 'R$ '+fmt(totalVend>0?totalVol/totalVend:0))
+}
+
+function renderCards() {
+  const maxVol = Math.max(...filtrados.map(v=>v.total_valor||0))
+  const grid = document.getElementById('cardsGrid')
+  if (!filtrados.length) { grid.innerHTML = '<div class="empty">Nenhum vendedor encontrado</div>'; return }
+  grid.innerHTML = filtrados.map((v, i) => {
+    const iniciais = (v.nome||'?').split(' ').slice(0,2).map(n=>n[0]).join('').toUpperCase()
+    const lojaBadge = `<span class="loja-badge ${LOJA_CLASS[v.loja]||''}">${v.loja||'—'}</span>`
+    const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : ''
+    const ultima = v.ultima_venda ? new Date(v.ultima_venda).toLocaleDateString('pt-BR') : '—'
+    return `<div class="vend-card ${rankClass}">
+      <div class="vend-avatar">${iniciais}</div>
+      <div class="vend-nome">${esc(v.nome)}</div>
+      <div class="vend-loja">${lojaBadge}</div>
+      <div class="vend-stats">
+        <div class="vend-stat"><div class="vend-stat-lbl">Vendas</div><div class="vend-stat-val">${v.total_vendas||0}</div></div>
+        <div class="vend-stat"><div class="vend-stat-lbl">Clientes</div><div class="vend-stat-val">${v.clientes_unicos||0}</div></div>
+        <div class="vend-stat"><div class="vend-stat-lbl">Volume</div><div class="vend-stat-val green">R$ ${fmt(v.total_valor||0)}</div></div>
+        <div class="vend-stat"><div class="vend-stat-lbl">Ticket Médio</div><div class="vend-stat-val gold">R$ ${fmt(v.ticket_medio||0)}</div></div>
+      </div>
+      <div class="vend-ultima">Última venda: ${ultima}</div>
+    </div>`
+  }).join('')
+}
+
+function renderTabela() {
+  const maxVol = Math.max(...filtrados.map(v=>v.total_valor||0))
+  const tbody = document.getElementById('tabelaBody')
+  document.getElementById('tabelaCount').textContent = filtrados.length + ' vendedores'
+  tbody.innerHTML = filtrados.map((v, i) => {
+    const pct = maxVol > 0 ? Math.round((v.total_valor||0)/maxVol*100) : 0
+    const lojaBadge = `<span class="loja-badge ${LOJA_CLASS[v.loja]||''}">${v.loja||'—'}</span>`
+    const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)
+    return `<tr>
+      <td style="font-size:14px">${medal}</td>
+      <td><strong>${esc(v.nome)}</strong></td>
+      <td>${lojaBadge}</td>
+      <td class="mono">${v.total_vendas||0}</td>
+      <td><span class="val-green">R$ ${fmt(v.total_valor||0)}</span><div class="bar-wrap"><div class="bar-fill" style="width:${pct}%"></div></div></td>
+      <td class="val-gold">R$ ${fmt(v.ticket_medio||0)}</td>
+      <td class="mono">${v.clientes_unicos||0}</td>
+      <td class="val-green">R$ ${fmt(v.cashback_gerado||0)}</td>
+    </tr>`
+  }).join('')
+}
+
+function filtrarLoja(loja, el) {
+  lojaFiltro = loja
+  document.querySelectorAll('.filtro-btn').forEach(b=>b.classList.remove('ativo'))
+  el.classList.add('ativo')
+  aplicarFiltros()
+  renderStats()
+}
+function filtrarBusca(q) { buscaFiltro = q; aplicarFiltros() }
+function ordenar(field) { sortField = field; aplicarFiltros() }
+function setView(mode, el) {
+  viewMode = mode
+  document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('ativo'))
+  el.classList.add('ativo')
+  document.getElementById('cardsView').style.display = mode==='cards'?'block':'none'
+  document.getElementById('tabelaView').style.display = mode==='tabela'?'block':'none'
+}
+
+function exportarExcel() {
+  const rows = [['Nome','Loja','Total Vendas','Volume (R$)','Ticket Médio','Clientes Únicos','Cashback Gerado']]
+  for (const v of filtrados) rows.push([v.nome,v.loja,v.total_vendas,(v.total_valor||0).toFixed(2),(v.ticket_medio||0).toFixed(2),v.clientes_unicos,(v.cashback_gerado||0).toFixed(2)])
+  const bom = '\uFEFF'
+  const csv = bom + rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(';')).join('\n')
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}))
+  a.download = 'vendedores-cashflow.csv'; a.click()
+  toast('✅ Excel exportado!')
+}
+
+function fmt(n){return Number(n).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+function setText(id,t){const e=document.getElementById(id);if(e)e.textContent=t}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+</script>
+</body>
+</html>
