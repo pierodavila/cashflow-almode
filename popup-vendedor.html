@@ -258,10 +258,19 @@ async function buscar() {
   show('loading')
 
   try {
-    // 1. Cache local
+    // 1. Supabase (mais atualizado)
+    const sbCliente = await buscarClienteSupabase(cpfRaw)
+    if (sbCliente) {
+      hide('loading')
+      clienteAtual = sbCliente
+      saldoAtual = sbCliente.cashback || 0
+      mostrar(sbCliente.nome, sbCliente.cpf, saldoAtual, sbCliente.loja)
+      return
+    }
+
+    // 2. Cache local (fallback)
     const cache = getCache()
     const local = cache.find(c => (c.cpf||'').replace(/\D/g,'') === cpfRaw)
-
     hide('loading')
     if (local) {
       clienteAtual = local
@@ -426,14 +435,57 @@ function atualizarSaldoCache(cpf, valorUsado) {
   } catch(e) { console.error('Erro ao atualizar cache:', e) }
 }
 
-// Salva resgate no histórico persistente
+// Salva resgate no histórico persistente (localStorage + Supabase)
 function salvarResgate(resgate) {
+  // localStorage
   const key = 'cf_resgates'
   const existentes = JSON.parse(localStorage.getItem(key) || '[]')
   existentes.unshift(resgate)
-  // Mantém últimos 500 resgates
   if (existentes.length > 500) existentes.splice(500)
   localStorage.setItem(key, JSON.stringify(existentes))
+
+  // Supabase (async, não bloqueia)
+  const sbCfg = JSON.parse(localStorage.getItem('cf_supabase_cfg') || '{}')
+  if (sbCfg.url && sbCfg.anonKey) {
+    fetch(`${sbCfg.url}/rest/v1/cf_resgates`, {
+      method: 'POST',
+      headers: {
+        'apikey': sbCfg.anonKey,
+        'Authorization': `Bearer ${sbCfg.anonKey}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        cpf: resgate.cpf,
+        nome: resgate.nome,
+        loja: resgate.loja,
+        vendedor: resgate.vendedor,
+        valor_resgatado: resgate.valorResgatado,
+        saldo_antes: resgate.saldoAntes,
+        saldo_depois: resgate.saldoDepois,
+        valor_compra: resgate.valorCompra,
+        created_at: resgate.data || new Date().toISOString()
+      })
+    }).catch(e => console.warn('Supabase resgate erro:', e))
+
+    // Atualiza cashback no Supabase
+    const cpf = (resgate.cpf || '').replace(/\D/g,'')
+    if (cpf) {
+      fetch(`${sbCfg.url}/rest/v1/cf_clientes?cpf=eq.${cpf}`, {
+        method: 'PATCH',
+        headers: {
+          'apikey': sbCfg.anonKey,
+          'Authorization': `Bearer ${sbCfg.anonKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          cashback: resgate.saldoDepois,
+          total_resgatado: (resgate.saldoAntes - resgate.saldoDepois) + (0)
+        })
+      }).catch(e => console.warn('Supabase update cashback erro:', e))
+    }
+  }
 }
 
 // Renderiza histórico do dia
@@ -491,6 +543,21 @@ function saveCfg() {
 // Utils
 function getCache() {
   try { return JSON.parse(localStorage.getItem('cf_clientes_v2') || '{}').clientes || [] } catch { return [] }
+}
+
+async function buscarClienteSupabase(cpf) {
+  const sbCfg = JSON.parse(localStorage.getItem('cf_supabase_cfg') || '{}')
+  if (!sbCfg.url || !sbCfg.anonKey) return null
+  try {
+    const r = await fetch(`${sbCfg.url}/rest/v1/cf_clientes?cpf=eq.${cpf}&select=*&limit=1`, {
+      headers: { 'apikey': sbCfg.anonKey, 'Authorization': `Bearer ${sbCfg.anonKey}` }
+    })
+    if (!r.ok) return null
+    const data = await r.json()
+    if (!data.length) return null
+    const c = data[0]
+    return { cpf: c.cpf, nome: c.nome, cashback: c.cashback, totalResgatado: c.total_resgatado, loja: c.loja, telefone: c.telefone }
+  } catch { return null }
 }
 function fmt(n) { return Number(n).toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.') }
 function fmtCpf(v) { const d=(v||'').replace(/\D/g,''); return d.length===11?d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4'):v }
