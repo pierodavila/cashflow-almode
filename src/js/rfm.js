@@ -3,12 +3,22 @@
  * CashFlow v2
  */
 
+// Normaliza datas em formatos DD-MM-YYYY e ISO para Date
+function parseDate(str) {
+  if (!str) return new Date(0)
+  // Formato DD-MM-YYYY do portal antigo
+  const ddmmyyyy = str.match(/^(\d{2})-(\d{2})-(\d{4})$/)
+  if (ddmmyyyy) return new Date(`${ddmmyyyy[3]}-${ddmmyyyy[2]}-${ddmmyyyy[1]}`)
+  // Formato ISO ou qualquer outro
+  return new Date(str)
+}
+
 export function calcularRFM(clientes) {
   const hoje = new Date()
   const comDias = clientes.map(c => ({
     ...c,
     diasDesdeUltimaCompra: c.ultimaCompra
-      ? Math.floor((hoje - new Date(c.ultimaCompra)) / 86400000)
+      ? Math.floor((hoje - parseDate(c.ultimaCompra)) / 86400000)
       : 999
   }))
   const sR = quintil(comDias, 'diasDesdeUltimaCompra', true)
