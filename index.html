@@ -453,6 +453,7 @@ const AutoSync = {
 
       // Merge das novas vendas
       let novas = 0
+      const mapaVend = {}
       for (const v of novasVendas) {
         if (v.situacao !== 'Concluida') continue
         const cpf = (v.cpfDoCliente || '').replace(/\D/g, '')
@@ -463,6 +464,7 @@ const AutoSync = {
         const nome = v.cliente?.razaoSocialOuNome || '—'
         const loja = v.pontoDeVenda?.loja?.nomeFantasia || '—'
         const tel = (v.cliente?.telefones || [])[0] || ''
+        const dataVenda = v.dataHora || ''
 
         if (!mapa[cpf]) {
           mapa[cpf] = { cpf, nome, totalCompras: 0, cashback: 0, qtdVendas: 0, telefone: tel, ultimaCompra: '', lojas: {}, loja }
@@ -470,7 +472,6 @@ const AutoSync = {
         }
 
         // Só adiciona vendas realmente novas (pela data)
-        const dataVenda = v.dataHora || ''
         if (dataVenda > (mapa[cpf].ultimaCompra || '')) {
           mapa[cpf].totalCompras += valor
           mapa[cpf].cashback += valor * CASHBACK_PCT
@@ -482,6 +483,22 @@ const AutoSync = {
           if (!mapa[cpf].lojas[loja]) mapa[cpf].lojas[loja] = { total: 0, qtd: 0 }
           mapa[cpf].lojas[loja].total += valor
           mapa[cpf].lojas[loja].qtd++
+        }
+
+        // Captura dados do vendedor
+        const vend = v.vendedor?.[0]
+        if (vend?.login) {
+          const vLogin = vend.login
+          if (!mapaVend[vLogin]) mapaVend[vLogin] = {
+            login: vLogin, nome: vend.nome || vLogin, loja,
+            total_vendas: 0, total_valor: 0, cashback_gerado: 0, cpfs: new Set()
+          }
+          const sv = mapaVend[vLogin]
+          sv.total_vendas++
+          sv.total_valor += valor
+          sv.cashback_gerado += valor * CASHBACK_PCT
+          sv.cpfs.add(cpf)
+          sv.ultima_venda = dataVenda
         }
       }
 
@@ -498,7 +515,7 @@ const AutoSync = {
       if (sbCfg.url && sbCfg.anonKey) {
         AutoSync.upsertSupabase(clientes, sbCfg).catch(e => console.warn('[AutoSync] Supabase upsert erro:', e))
         // Upsert vendedores
-        if (state.vendedores) AutoSync.upsertVendedores(state.vendedores, sbCfg).catch(e => console.warn('[AutoSync] Vendedores upsert erro:', e))
+        if (Object.keys(mapaVend).length) AutoSync.upsertVendedores(mapaVend, sbCfg).catch(e => console.warn('[AutoSync] Vendedores upsert erro:', e))
       }
 
       const agora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
