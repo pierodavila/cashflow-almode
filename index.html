@@ -491,6 +491,8 @@ const AutoSync = {
       const sbCfg = JSON.parse(localStorage.getItem('cf_supabase_cfg') || '{}')
       if (sbCfg.url && sbCfg.anonKey) {
         AutoSync.upsertSupabase(clientes, sbCfg).catch(e => console.warn('[AutoSync] Supabase upsert erro:', e))
+        // Upsert vendedores
+        if (state.vendedores) AutoSync.upsertVendedores(state.vendedores, sbCfg).catch(e => console.warn('[AutoSync] Vendedores upsert erro:', e))
       }
 
       const agora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
@@ -574,6 +576,27 @@ const AutoSync = {
       await new Promise(r => setTimeout(r, 100))
     }
     console.log('[AutoSync] Supabase upsert concluído:', clientes.length, 'clientes')
+  },
+
+  async upsertVendedores(vendedoresMap, sbCfg) {
+    const rows = Object.values(vendedoresMap).map(v => ({
+      login: v.login, nome: v.nome, loja: v.loja,
+      total_vendas: v.total_vendas,
+      total_valor: parseFloat(v.total_valor.toFixed(2)),
+      cashback_gerado: parseFloat(v.cashback_gerado.toFixed(2)),
+      clientes_unicos: v.clientes instanceof Set ? v.clientes.size : (v.clientes_unicos||0),
+      ticket_medio: parseFloat((v.total_valor/v.total_vendas).toFixed(2)),
+      ultima_venda: v.ultima_venda || null,
+      updated_at: new Date().toISOString()
+    }))
+    if (!rows.length) return
+    await fetch(`${sbCfg.url}/rest/v1/cf_vendedores`, {
+      method: 'POST',
+      headers: { 'apikey': sbCfg.anonKey, 'Authorization': `Bearer ${sbCfg.anonKey}`, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify(rows)
+    })
+    localStorage.setItem('cf_vendedores', JSON.stringify(rows))
+    console.log('[AutoSync] Vendedores upsert:', rows.length)
   },
 
   // Gatilho pós-venda: dispara SMS 7 dias após a última compra
