@@ -487,6 +487,12 @@ const AutoSync = {
       }))
       localStorage.setItem('cf_sync_last_auto', Date.now().toString())
 
+      // Upsert no Supabase (async, não bloqueia)
+      const sbCfg = JSON.parse(localStorage.getItem('cf_supabase_cfg') || '{}')
+      if (sbCfg.url && sbCfg.anonKey) {
+        AutoSync.upsertSupabase(clientes, sbCfg).catch(e => console.warn('[AutoSync] Supabase upsert erro:', e))
+      }
+
       const agora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
       AutoSync.setBadge(`✓ sync ${agora}`, '#00e5a0')
       console.log(`[AutoSync] Concluído: ${clientes.length} clientes, ${novas} novos`)
@@ -537,6 +543,34 @@ const AutoSync = {
     b.textContent = texto
     b.style.color = cor
     b.style.borderColor = cor + '44'
+  },
+
+  async upsertSupabase(clientes, sbCfg) {
+    const LOTE = 500
+    const headers = {
+      'apikey': sbCfg.anonKey,
+      'Authorization': `Bearer ${sbCfg.anonKey}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'resolution=merge-duplicates,return=minimal'
+    }
+    for (let i = 0; i < clientes.length; i += LOTE) {
+      const lote = clientes.slice(i, i + LOTE).map(c => ({
+        cpf: c.cpf, nome: c.nome || '—',
+        total_compras: c.totalCompras || 0,
+        cashback: c.cashback || 0,
+        total_resgatado: c.totalResgatado || 0,
+        qtd_vendas: c.qtdVendas || 0,
+        telefone: c.telefone || '',
+        ultima_compra: c.ultimaCompra || '',
+        loja: c.loja || '—',
+        lojas: c.lojas || {}
+      }))
+      await fetch(`${sbCfg.url}/rest/v1/cf_clientes`, {
+        method: 'POST', headers, body: JSON.stringify(lote)
+      })
+      await new Promise(r => setTimeout(r, 100))
+    }
+    console.log('[AutoSync] Supabase upsert concluído:', clientes.length, 'clientes')
   }
 }
 
