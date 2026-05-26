@@ -497,6 +497,9 @@ const AutoSync = {
       AutoSync.setBadge(`✓ sync ${agora}`, '#00e5a0')
       console.log(`[AutoSync] Concluído: ${clientes.length} clientes, ${novas} novos`)
 
+      // Roda gatilho pós-venda
+      AutoSync.verificarGatilhoPosVenda(clientes).catch(e => console.warn('[Gatilho] erro:', e))
+
       // Atualiza UI se o dashboard estiver aberto
       if (typeof App !== 'undefined' && App.renderDashboard) {
         setTimeout(() => App.renderDashboard(), 500)
@@ -571,6 +574,80 @@ const AutoSync = {
       await new Promise(r => setTimeout(r, 100))
     }
     console.log('[AutoSync] Supabase upsert concluído:', clientes.length, 'clientes')
+  },
+
+  // Gatilho pós-venda: dispara SMS 7 dias após a última compra
+  async verificarGatilhoPosVenda(clientes) {
+    const gatilhos = JSON.parse(localStorage.getItem('cf_gatilhos') || '{}')
+    const cfg = JSON.parse(localStorage.getItem('cf_zenvia_cfg') || '{}')
+
+    // Só roda se o gatilho de dias sem comprar estiver ativo e API configurada
+    if (!gatilhos.g1 || !cfg.apiKey) return
+
+    const diasAlvo = parseInt(gatilhos.g1dias) || 7
+    const canal = gatilhos.g1canal || 'sms'
+    const template = gatilhos.g1msg || 'Oi {nome}! Esperamos que tenha gostado da sua compra na {loja}. Você acumulou R$ {cashback} em cashback. Venha nos visitar!'
+
+    const hoje = new Date()
+    const jaDisparados = JSON.parse(localStorage.getItem('cf_disparos_posVenda') || '{}')
+    const novosDisparos = []
+
+    for (const c of clientes) {
+      if (!c.telefone || !c.ultimaCompra) continue
+
+      const diasDesde = Math.floor((hoje - new Date(c.ultimaCompra)) / 86400000)
+      if (diasDesde !== diasAlvo) continue
+
+      // Chave única para evitar disparar duas vezes para o mesmo cliente+data
+      const chave = `${c.cpf}_${c.ultimaCompra.substring(0,10)}`
+      if (jaDisparados[chave]) continue
+
+      // Monta mensagem
+      const msg = template
+        .replace(/{nome}/g, (c.nome||'').split(' ')[0])
+        .replace(/{loja}/g, c.loja || 'nossa loja')
+        .replace(/{cashback}/g, 'R$ ' + (c.cashback||0).toFixed(2).replace('.',','))
+        .replace(/{cpf}/g, c.cpf)
+        .replace(/{qtd_compras}/g, c.qtdVendas||0)
+
+      const tel = (c.telefone||'').replace(/\D/g,'')
+      if (tel.length < 10) continue
+
+      try {
+        if (canal === 'sms' || canal === 'ambos') {
+          await fetch('https://api.zenvia.com/v2/channels/sms/messages', {
+            method: 'POST',
+            headers: { 'X-API-Token': cfg.apiKey, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              from: cfg.senderId || 'SWNOutlet',
+              to: '+55' + tel,
+              contents: [{ type: 'text', text: msg }]
+            })
+          })
+        }
+        if (canal === 'whatsapp' || canal === 'ambos') {
+          await fetch('https://api.zenvia.com/v2/channels/whatsapp/messages', {
+            method: 'POST',
+            headers: { 'X-API-Token': cfg.apiKey, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              from: cfg.numWA || '',
+              to: '+55' + tel,
+              contents: [{ type: 'text', text: msg }]
+            })
+          })
+        }
+        jaDisparados[chave] = new Date().toISOString()
+        novosDisparos.push(c.nome)
+        await new Promise(r => setTimeout(r, 200))
+      } catch(e) {
+        console.warn('[Gatilho] Erro ao disparar para', c.nome, e)
+      }
+    }
+
+    if (novosDisparos.length) {
+      localStorage.setItem('cf_disparos_posVenda', JSON.stringify(jaDisparados))
+      console.log('[Gatilho pós-venda] Disparados:', novosDisparos.length, 'SMS')
+    }
   }
 }
 
