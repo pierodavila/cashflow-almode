@@ -755,6 +755,16 @@ function salvarToken() {
 // Mostra modal só se não tiver token configurado
 window.addEventListener('DOMContentLoaded', () => {
   const cfg = JSON.parse(localStorage.getItem('cf_almode_cfg') || '{}')
+  
+  // Se veio de um clique no botão do Almode, sessionStorage tem o token
+  const tokenDoAlmode = sessionStorage.getItem('JWT_TOKEN')
+  if (tokenDoAlmode && !cfg.token) {
+    const tokenInput = document.getElementById('tokenInput')
+    if (tokenInput) tokenInput.value = tokenDoAlmode
+    setTimeout(() => salvarToken(), 500)
+    return
+  }
+  
   if (!cfg.token) {
     document.getElementById('loginModal').style.display = 'flex'
   } else {
