@@ -78,6 +78,37 @@ main{padding:20px 24px;max-width:1200px;margin:0 auto}
 .toast{position:fixed;bottom:20px;right:20px;background:var(--s);border:1px solid var(--bd);border-radius:10px;padding:11px 16px;font-size:13px;z-index:9999;transform:translateY(70px);opacity:0;transition:all .25s cubic-bezier(.34,1.56,.64,1)}
 .toast.show{transform:none;opacity:1}
 </style>
+
+<!-- AUTH CHECK -->
+<script>
+const auth = {
+  check: function(requireAdmin = false) {
+    const tipo = localStorage.getItem('cf_auth_tipo')
+    const token = localStorage.getItem('cf_auth_token')
+    
+    if (!tipo || !token) {
+      window.location.href = 'login.html'
+      return false
+    }
+    
+    if (requireAdmin && tipo !== 'admin') {
+      window.location.href = 'login.html'
+      return false
+    }
+    
+    return { tipo, token, loja: localStorage.getItem('cf_auth_loja') }
+  },
+  
+  logout: function() {
+    localStorage.removeItem('cf_auth_tipo')
+    localStorage.removeItem('cf_auth_token')
+    localStorage.removeItem('cf_auth_loja')
+    window.location.href = 'login.html'
+  }
+}
+
+const usuarioAtual = auth.check()
+</script>
 </head>
 <body>
 
@@ -172,10 +203,16 @@ let buscaFiltro = ''
 let contatados = {}
 
 function entrar() {
-  loja = document.getElementById('loginLoja').value
-  operador = document.getElementById('loginNome').value.trim()
-  if (!loja) { toast('Selecione sua loja'); return }
-  if (!operador) { toast('Digite seu nome'); return }
+  // Para lojas, usa a loja da sessão
+  if (usuarioAtual.tipo === 'loja') {
+    loja = usuarioAtual.loja
+    operador = 'Gerente de Loja'
+  } else {
+    loja = document.getElementById('loginLoja').value
+    operador = document.getElementById('loginNome').value.trim()
+    if (!loja) { toast('Selecione sua loja'); return }
+    if (!operador) { toast('Digite seu nome'); return }
+  }
   document.getElementById('loginWrap').style.display = 'none'
   document.getElementById('appWrap').style.display = 'block'
   document.getElementById('lojaBadge').textContent = loja
