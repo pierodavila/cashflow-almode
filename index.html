@@ -552,7 +552,6 @@ const AutoSync = {
       localStorage.setItem('cf_almode_cfg', JSON.stringify(cfg))
     }
     if (AutoSync.rodando) return
-    const cfg = AutoSync.getCfg()
     if (!cfg.domain || !cfg.token) {
       alert('Configure o domínio e token do Almode nas configurações primeiro.')
       return
