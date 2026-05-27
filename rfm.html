@@ -93,6 +93,38 @@ tr:hover td{background:rgba(255,255,255,.015)}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-txt{color:var(--mt);font-size:13px}
 </style>
+
+<!-- AUTH CHECK -->
+<script>
+const auth = {
+  check: function(requireAdmin = false) {
+    const tipo = localStorage.getItem('cf_auth_tipo')
+    const token = localStorage.getItem('cf_auth_token')
+    
+    if (!tipo || !token) {
+      window.location.href = 'login.html'
+      return false
+    }
+    
+    if (requireAdmin && tipo !== 'admin') {
+      window.location.href = 'login.html'
+      return false
+    }
+    
+    return { tipo, token, loja: localStorage.getItem('cf_auth_loja') }
+  },
+  
+  logout: function() {
+    localStorage.removeItem('cf_auth_tipo')
+    localStorage.removeItem('cf_auth_token')
+    localStorage.removeItem('cf_auth_loja')
+    window.location.href = 'login.html'
+  }
+}
+
+// Verifica ao carregar
+const usuarioAtual = auth.check()
+</script>
 </head>
 <body>
 
