@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CashFlow — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080810;--s:#10101a;--s2:#18182a;--bd:#252538;--ac:#00e5a0;--ac2:rgba(0,229,160,.1);--tx:#e6e6f0;--mt:#666688;--fn:'IBM Plex Sans',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:linear-gradient(135deg,#080810,#0f0f1e);color:var(--tx);font-family:var(--fn);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+
+.login-card{background:var(--s);border:1px solid var(--bd);border-radius:16px;padding:40px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+
+.logo{font-size:22px;font-weight:600;letter-spacing:-.04em;margin-bottom:6px}
+.logo span{color:var(--ac)}
+.logo-sub{font-size:12px;color:var(--mt);margin-bottom:28px}
+
+.form-group{margin-bottom:16px}
+.form-lbl{font-size:11px;color:var(--mt);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em}
+.form-inp{width:100%;padding:11px 13px;background:var(--s2);border:1px solid var(--bd);border-radius:9px;color:var(--tx);font-size:13px;font-family:var(--fn);outline:none}
+.form-inp:focus{border-color:var(--ac)}
+.form-sel{width:100%;padding:11px 13px;background:var(--s2);border:1px solid var(--bd);border-radius:9px;color:var(--tx);font-size:13px;font-family:var(--fn);outline:none;cursor:pointer}
+.form-sel:focus{border-color:var(--ac)}
+.form-sel option{background:var(--s);color:var(--tx)}
+
+.btn{width:100%;padding:12px;background:var(--ac);color:#080810;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--fn);transition:all .15s}
+.btn:hover{filter:brightness(1.1)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+.btn-admin{background:rgba(100,150,255,.2);color:#6496ff;margin-top:12px}
+.btn-admin:hover:not(:disabled){background:rgba(100,150,255,.3)}
+
+.error{color:#ff6b6b;font-size:12px;margin-top:6px;text-align:center}
+.info{color:var(--mt);font-size:11px;margin-top:12px;text-align:center;line-height:1.5}
+
+.divider{height:1px;background:var(--bd);margin:24px 0;position:relative}
+.divider-text{position:absolute;left:50%;top:-8px;transform:translateX(-50%);background:var(--s);padding:0 8px;font-size:11px;color:var(--mt)}
+
+.loading{display:none;text-align:center;color:var(--mt);font-size:12px}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--bd);border-top-color:var(--ac);border-radius:50%;animation:spin .6s linear infinite;margin-right:6px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="login-card">
+  <div class="logo">Cash<span>Flow</span></div>
+  <div class="logo-sub">Gestão de Cashback Almode</div>
+
+  <div class="form-group">
+    <label class="form-lbl">Tipo de Acesso</label>
+    <select class="form-sel" id="tipoAcesso" onchange="mudarTipo()">
+      <option value="loja">🏪 Gerente de Loja</option>
+      <option value="admin">🔑 Admin (Piero)</option>
+    </select>
+  </div>
+
+  <!-- LOJA -->
+  <div id="loginLoja" style="display:block">
+    <div class="form-group">
+      <label class="form-lbl">Selecione sua loja</label>
+      <select class="form-sel" id="lojaSel" required>
+        <option value="">— escolha a loja —</option>
+        <option value="FORUM OUTLET">FORUM OUTLET</option>
+        <option value="COLCCI OUTLET OPRJ">COLCCI OUTLET OPRJ</option>
+        <option value="TRITON OUTLET">TRITON OUTLET</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-lbl">Senha da Loja</label>
+      <input type="password" class="form-inp" id="senhaLoja" placeholder="••••••••" required>
+    </div>
+
+    <button class="btn" onclick="loginLoja()">Entrar na Loja →</button>
+    <div class="error" id="errorLoja"></div>
+    <div class="info">
+      Acesso restrito ao painel RFM e disparo de mensagens.<br>
+      Senhas são: <strong>forum123</strong>, <strong>colcci123</strong>, <strong>triton123</strong>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <div id="loginAdmin" style="display:none">
+    <div class="form-group">
+      <label class="form-lbl">Senha Admin</label>
+      <input type="password" class="form-inp" id="senhaAdmin" placeholder="••••••••" required>
+    </div>
+
+    <button class="btn btn-admin" onclick="loginAdmin()">Acessar Admin →</button>
+    <div class="error" id="errorAdmin"></div>
+  </div>
+
+  <div class="loading" id="loading">
+    <span class="spinner"></span> Autenticando...
+  </div>
+</div>
+
+<script>
+function mudarTipo() {
+  const tipo = document.getElementById('tipoAcesso').value
+  document.getElementById('loginLoja').style.display = tipo === 'loja' ? 'block' : 'none'
+  document.getElementById('loginAdmin').style.display = tipo === 'admin' ? 'block' : 'none'
+  document.getElementById('errorLoja').textContent = ''
+  document.getElementById('errorAdmin').textContent = ''
+}
+
+function mostrarLoading(show) {
+  document.getElementById('loading').style.display = show ? 'flex' : 'none'
+}
+
+function loginLoja() {
+  const loja = document.getElementById('lojaSel').value
+  const senha = document.getElementById('senhaLoja').value
+  const errorEl = document.getElementById('errorLoja')
+
+  errorEl.textContent = ''
+  if (!loja) { errorEl.textContent = 'Selecione a loja'; return }
+  if (!senha) { errorEl.textContent = 'Digite a senha'; return }
+
+  // Senhas por loja (você pode alterar depois)
+  const senhas = {
+    'FORUM OUTLET': 'forum123',
+    'COLCCI OUTLET OPRJ': 'colcci123',
+    'TRITON OUTLET': 'triton123'
+  }
+
+  if (senhas[loja] !== senha) {
+    errorEl.textContent = 'Senha incorreta'
+    return
+  }
+
+  // Salva sessão
+  mostrarLoading(true)
+  localStorage.setItem('cf_auth_tipo', 'loja')
+  localStorage.setItem('cf_auth_loja', loja)
+  localStorage.setItem('cf_auth_token', Date.now().toString())
+
+  setTimeout(() => {
+    window.location.href = `rfm.html?loja=${encodeURIComponent(loja)}`
+  }, 500)
+}
+
+function loginAdmin() {
+  const senha = document.getElementById('senhaAdmin').value
+  const errorEl = document.getElementById('errorAdmin')
+
+  errorEl.textContent = ''
+  if (!senha) { errorEl.textContent = 'Digite a senha'; return }
+
+  // Senha admin (você deve mudar para algo seguro)
+  const senhaAdmin = 'piero123'
+
+  if (senha !== senhaAdmin) {
+    errorEl.textContent = 'Senha admin incorreta'
+    return
+  }
+
+  mostrarLoading(true)
+  localStorage.setItem('cf_auth_tipo', 'admin')
+  localStorage.setItem('cf_auth_token', Date.now().toString())
+
+  setTimeout(() => {
+    window.location.href = 'index.html'
+  }, 500)
+}
+
+// Enter para submeter
+document.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    if (document.getElementById('tipoAcesso').value === 'loja') loginLoja()
+    else loginAdmin()
+  }
+})
+</script>
+
+</body>
+</html>
