@@ -76,8 +76,6 @@ body{background:linear-gradient(135deg,#080810,#0f0f1e);color:var(--tx);font-fam
     <button class="btn" onclick="loginLoja()">Entrar na Loja →</button>
     <div class="error" id="errorLoja"></div>
     <div class="info">
-      Acesso restrito ao painel RFM e disparo de mensagens.<br>
-      Senhas são: <strong>forum123</strong>, <strong>colcci123</strong>, <strong>triton123</strong>
     </div>
   </div>
 
@@ -121,9 +119,6 @@ function loginLoja() {
 
   // Senhas por loja (você pode alterar depois)
   const senhas = {
-    'FORUM OUTLET': 'forum123',
-    'COLCCI OUTLET OPRJ': 'colcci123',
-    'TRITON OUTLET': 'triton123'
   }
 
   if (senhas[loja] !== senha) {
