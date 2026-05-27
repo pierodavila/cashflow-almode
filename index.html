@@ -6,6 +6,38 @@
 <title>CashFlow — Gestão de Cashback Almode</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="src/css/style.css">
+
+<!-- AUTH CHECK -->
+<script>
+const auth = {
+  check: function(requireAdmin = false) {
+    const tipo = localStorage.getItem('cf_auth_tipo')
+    const token = localStorage.getItem('cf_auth_token')
+    
+    if (!tipo || !token) {
+      window.location.href = 'login.html'
+      return false
+    }
+    
+    if (requireAdmin && tipo !== 'admin') {
+      window.location.href = 'login.html'
+      return false
+    }
+    
+    return { tipo, token, loja: localStorage.getItem('cf_auth_loja') }
+  },
+  
+  logout: function() {
+    localStorage.removeItem('cf_auth_tipo')
+    localStorage.removeItem('cf_auth_token')
+    localStorage.removeItem('cf_auth_loja')
+    window.location.href = 'login.html'
+  }
+}
+
+// Admin só
+const usuarioAtual = auth.check(true)
+</script>
 </head>
 <body>
 
