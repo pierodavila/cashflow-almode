@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CashFlow — Gerenciar Usuários</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080810;--s:#10101a;--s2:#18182a;--bd:#252538;--ac:#00e5a0;--ac2:rgba(0,229,160,.1);--tx:#e6e6f0;--mt:#666688;--fn:'IBM Plex Sans',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:linear-gradient(135deg,#080810,#0f0f1e);color:var(--tx);font-family:var(--fn);min-height:100vh;padding:20px}
+
+.container{max-width:1200px;margin:0 auto}
+
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
+.logo{font-size:20px;font-weight:600;letter-spacing:-.04em}
+.logo span{color:var(--ac)}
+.sair-btn{padding:8px 14px;background:rgba(100,150,255,.2);color:#6496ff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600}
+.sair-btn:hover{background:rgba(100,150,255,.3)}
+
+.tabs{display:flex;gap:12px;border-bottom:1px solid var(--bd);margin-bottom:28px}
+.tab{padding:12px 20px;background:none;border:none;color:var(--mt);cursor:pointer;font-size:13px;font-weight:500;border-bottom:2px solid transparent;transition:all .2s}
+.tab.ativo{color:var(--ac);border-bottom-color:var(--ac)}
+.tab:hover{color:var(--tx)}
+
+.painel{display:none}
+.painel.ativo{display:block}
+
+.tabela{width:100%;border-collapse:collapse;background:var(--s);border-radius:8px;overflow:hidden;border:1px solid var(--bd)}
+.tabela thead{background:var(--s2)}
+.tabela th{padding:12px;text-align:left;font-size:11px;color:var(--mt);text-transform:uppercase;font-weight:600;border-bottom:1px solid var(--bd)}
+.tabela td{padding:12px;border-bottom:1px solid rgba(255,255,255,.02);font-size:12px}
+.tabela tr:hover{background:rgba(255,255,255,.03)}
+
+.status-ativo{color:#4ade80}
+.status-inativo{color:#ef4444}
+
+.btn{padding:8px 12px;background:rgba(0,229,160,.2);color:var(--ac);border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;transition:all .2s}
+.btn:hover{background:rgba(0,229,160,.3)}
+.btn-danger{background:rgba(239,68,68,.2);color:#ef4444}
+.btn-danger:hover{background:rgba(239,68,68,.3)}
+.btn-info{background:rgba(59,139,212,.2);color:#3b8bd4}
+.btn-info:hover{background:rgba(59,139,212,.3)}
+
+.form-group{margin-bottom:16px}
+.form-lbl{font-size:11px;color:var(--mt);display:block;margin-bottom:6px;text-transform:uppercase}
+.form-inp{width:100%;padding:9px 11px;background:var(--s2);border:1px solid var(--bd);border-radius:6px;color:var(--tx);font-size:12px}
+.form-inp:focus{border-color:var(--ac);outline:none}
+
+.card{background:var(--s);border:1px solid var(--bd);border-radius:8px;padding:20px;margin-bottom:20px}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:20px}
+.stat-card{background:var(--s);border:1px solid var(--bd);border-radius:8px;padding:16px;text-align:center}
+.stat-valor{font-size:28px;font-weight:600;color:var(--ac);margin:8px 0}
+.stat-label{font-size:11px;color:var(--mt);text-transform:uppercase}
+
+.loading{text-align:center;padding:40px;color:var(--mt)}
+.spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--bd);border-top-color:var(--ac);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.toast{position:fixed;bottom:20px;right:20px;background:var(--s);border:1px solid var(--bd);border-left:3px solid var(--ac);padding:12px 16px;border-radius:6px;font-size:12px;z-index:9999}
+.toast.erro{border-left-color:#ef4444}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="logo">Cash<span>Flow</span></div>
+    <button class="sair-btn" onclick="logout()">👤 Sair</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab ativo" onclick="abaClicada('usuarios')">👥 Usuários</button>
+    <button class="tab" onclick="abaClicada('logs')">📊 Logs de Acesso</button>
+    <button class="tab" onclick="abaClicada('stats')">📈 Estatísticas</button>
+  </div>
+
+  <!-- ABA: USUÁRIOS -->
+  <div id="usuarios" class="painel ativo">
+    <div style="margin-bottom:20px">
+      <h2 style="margin-bottom:12px">Gerenciar Usuários</h2>
+      <button class="btn" onclick="mostrarFormNovoUsuario()" style="background:var(--ac2);color:var(--ac);margin-bottom:20px">+ Novo Usuário</button>
+    </div>
+
+    <div id="formNovoUsuario" style="display:none;margin-bottom:20px">
+      <div class="card">
+        <h3 style="margin-bottom:16px;font-size:14px">Novo Usuário</h3>
+        <div class="grid" style="grid-template-columns:1fr 1fr">
+          <div class="form-group">
+            <label class="form-lbl">Login</label>
+            <input type="text" class="form-inp" id="novo_login" placeholder="ex: joao_forum">
+          </div>
+          <div class="form-group">
+            <label class="form-lbl">Nome</label>
+            <input type="text" class="form-inp" id="novo_nome" placeholder="Nome completo">
+          </div>
+          <div class="form-group">
+            <label class="form-lbl">Tipo</label>
+            <select class="form-inp" id="novo_tipo" onchange="updateLoja()">
+              <option value="loja">Gerente de Loja</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div class="form-group" id="lojaGroup">
+            <label class="form-lbl">Loja</label>
+            <select class="form-inp" id="novo_loja">
+              <option>FORUM OUTLET</option>
+              <option>COLCCI OUTLET OPRJ</option>
+              <option>TRITON OUTLET</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" onclick="salvarNovoUsuario()" style="background:var(--ac2);color:var(--ac);margin-right:8px">Criar</button>
+        <button class="btn" onclick="esconderFormNovoUsuario()" style="background:var(--bd);color:var(--mt)">Cancelar</button>
+      </div>
+    </div>
+
+    <div id="usuariosLista" class="loading">
+      <div class="spinner"></div>
+    </div>
+  </div>
+
+  <!-- ABA: LOGS -->
+  <div id="logs" class="painel">
+    <h2 style="margin-bottom:12px">Logs de Acesso</h2>
+    <div id="logsLista" class="loading">
+      <div class="spinner"></div>
+    </div>
+  </div>
+
+  <!-- ABA: STATS -->
+  <div id="stats" class="painel">
+    <h2 style="margin-bottom:12px">Estatísticas de Acesso</h2>
+    <div id="statsDiv" class="loading">
+      <div class="spinner"></div>
+    </div>
+  </div>
+</div>
+
+<script src="auth-api.js"></script>
+<script>
+// Valida autenticação
+const usuario = AuthAPI.check(true)
+if (!usuario) {
+  window.location.href = 'login.html'
+}
+
+let usuariosListaLocal = []
+
+function abaClicada(aba) {
+  // Atualiza abas
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('ativo'))
+  document.querySelectorAll('.painel').forEach(p => p.classList.remove('ativo'))
+  
+  document.querySelector(`[onclick="abaClicada('${aba}')"]`).classList.add('ativo')
+  document.getElementById(aba).classList.add('ativo')
+  
+  // Carrega conteúdo
+  if (aba === 'usuarios') carregarUsuarios()
+  if (aba === 'logs') carregarLogs()
+  if (aba === 'stats') carregarStats()
+}
+
+function updateLoja() {
+  const tipo = document.getElementById('novo_tipo').value
+  document.getElementById('lojaGroup').style.display = tipo === 'loja' ? 'block' : 'none'
+}
+
+function mostrarFormNovoUsuario() {
+  document.getElementById('formNovoUsuario').style.display = 'block'
+}
+
+function esconderFormNovoUsuario() {
+  document.getElementById('formNovoUsuario').style.display = 'none'
+}
+
+async function salvarNovoUsuario() {
+  const login = document.getElementById('novo_login').value.trim()
+  const nome = document.getElementById('novo_nome').value.trim()
+  const tipo = document.getElementById('novo_tipo').value
+  const loja = tipo === 'loja' ? document.getElementById('novo_loja').value : null
+  
+  if (!login || !nome) {
+    toast('Preencha todos os campos', true)
+    return
+  }
+  
+  const resultado = await UsuariosAPI.salvar(login, nome, tipo, loja, true)
+  if (resultado.sucesso) {
+    toast('Usuário criado com sucesso')
+    esconderFormNovoUsuario()
+    document.getElementById('novo_login').value = ''
+    document.getElementById('novo_nome').value = ''
+    carregarUsuarios()
+  } else {
+    toast('Erro ao criar usuário: ' + resultado.mensagem, true)
+  }
+}
+
+async function carregarUsuarios() {
+  const resultado = await UsuariosAPI.listar()
+  if (!resultado.sucesso) {
+    document.getElementById('usuariosLista').innerHTML = '<p style="color:var(--mt)">Erro ao carregar usuários</p>'
+    return
+  }
+  
+  usuariosListaLocal = resultado.usuarios
+  
+  let html = '<table class="tabela"><thead><tr>'
+  html += '<th>Login</th><th>Nome</th><th>Tipo</th><th>Loja</th><th>Status</th><th>Ações</th>'
+  html += '</tr></thead><tbody>'
+  
+  resultado.usuarios.forEach(u => {
+    const statusClass = u.ativo ? 'status-ativo' : 'status-inativo'
+    const statusTxt = u.ativo ? 'Ativo' : 'Inativo'
+    html += `<tr>`
+    html += `<td>${u.login}</td>`
+    html += `<td>${u.nome}</td>`
+    html += `<td>${u.tipo === 'admin' ? '👑 Admin' : '🏪 Loja'}</td>`
+    html += `<td>${u.loja || '—'}</td>`
+    html += `<td><span class="${statusClass}">${statusTxt}</span></td>`
+    html += `<td>`
+    html += `<button class="btn btn-info" onclick="resetarSenhaUI('${u.login}')">🔑 Resetar Senha</button> `
+    html += `<button class="btn" onclick="toggleAtivo('${u.login}',${u.ativo})" style="color:${u.ativo ? '#ef4444' : '#4ade80'}">${u.ativo ? 'Desativar' : 'Ativar'}</button>`
+    html += `</td>`
+    html += `</tr>`
+  })
+  
+  html += '</tbody></table>'
+  document.getElementById('usuariosLista').innerHTML = html
+}
+
+async function toggleAtivo(login, ativoAtual) {
+  const usuario = usuariosListaLocal.find(u => u.login === login)
+  if (!usuario) return
+  
+  const resultado = await UsuariosAPI.salvar(login, usuario.nome, usuario.tipo, usuario.loja, !ativoAtual)
+  if (resultado.sucesso) {
+    toast(`Usuário ${ativoAtual ? 'desativado' : 'ativado'}`)
+    carregarUsuarios()
+  } else {
+    toast('Erro ao atualizar usuário', true)
+  }
+}
+
+function resetarSenhaUI(login) {
+  const novaSenha = prompt(`Qual a nova senha para ${login}?`)
+  if (!novaSenha) return
+  resetarSenha(login, novaSenha)
+}
+
+async function resetarSenha(login, novaSenha) {
+  const resultado = await UsuariosAPI.resetarSenha(login, novaSenha)
+  if (resultado.sucesso) {
+    toast(`Senha de ${login} resetada com sucesso`)
+  } else {
+    toast('Erro ao resetar senha', true)
+  }
+}
+
+async function carregarLogs() {
+  const resultado = await LogsAPI.listar(200)
+  if (!resultado.sucesso) {
+    document.getElementById('logsLista').innerHTML = '<p style="color:var(--mt)">Erro ao carregar logs</p>'
+    return
+  }
+  
+  if (resultado.logs.length === 0) {
+    document.getElementById('logsLista').innerHTML = '<p style="color:var(--mt);padding:20px">Nenhum log registrado</p>'
+    return
+  }
+  
+  let html = '<table class="tabela"><thead><tr>'
+  html += '<th>Login</th><th>Tipo</th><th>Loja</th><th>Data/Hora</th><th>Status</th><th>IP</th>'
+  html += '</tr></thead><tbody>'
+  
+  resultado.logs.forEach(log => {
+    const statusClass = log.sucesso ? 'status-ativo' : 'status-inativo'
+    html += `<tr>`
+    html += `<td>${log.login}</td>`
+    html += `<td>${log.tipo_acesso === 'admin' ? '👑' : '🏪'} ${log.tipo_acesso}</td>`
+    html += `<td>${log.loja || '—'}</td>`
+    html += `<td>${log.timestamp_fmt}</td>`
+    html += `<td><span class="${statusClass}">${log.sucesso_txt}</span></td>`
+    html += `<td style="font-family:monospace;font-size:10px">${log.ip_address || '—'}</td>`
+    html += `</tr>`
+  })
+  
+  html += '</tbody></table>'
+  document.getElementById('logsLista').innerHTML = html
+}
+
+async function carregarStats() {
+  const resultado = await LogsAPI.stats()
+  if (!resultado.sucesso) {
+    document.getElementById('statsDiv').innerHTML = '<p style="color:var(--mt)">Erro ao carregar estatísticas</p>'
+    return
+  }
+  
+  let html = '<div class="grid">'
+  html += `<div class="stat-card"><div class="stat-label">Total de Acessos</div><div class="stat-valor">${resultado.totalAcessos}</div></div>`
+  html += `<div class="stat-card"><div class="stat-label">Sucessos</div><div class="stat-valor" style="color:#4ade80">${resultado.sucessos}</div></div>`
+  html += `<div class="stat-card"><div class="stat-label">Falhas</div><div class="stat-valor" style="color:#ef4444">${resultado.falhas}</div></div>`
+  html += `<div class="stat-card"><div class="stat-label">Taxa de Sucesso</div><div class="stat-valor">${resultado.taxaSucesso}%</div></div>`
+  html += '</div>'
+  
+  html += '<div class="card"><h3 style="margin-bottom:12px;font-size:13px">Acessos por Tipo</h3>'
+  html += '<table class="tabela"><thead><tr><th>Tipo</th><th>Quantidade</th></tr></thead><tbody>'
+  for (const [tipo, qtd] of Object.entries(resultado.porTipo)) {
+    html += `<tr><td>${tipo}</td><td><strong>${qtd}</strong></td></tr>`
+  }
+  html += '</tbody></table></div>'
+  
+  document.getElementById('statsDiv').innerHTML = html
+}
+
+function toast(msg, erro = false) {
+  const toast = document.createElement('div')
+  toast.className = 'toast' + (erro ? ' erro' : '')
+  toast.textContent = msg
+  document.body.appendChild(toast)
+  setTimeout(() => toast.remove(), 3000)
+}
+
+function logout() {
+  AuthAPI.logout()
+  window.location.href = 'login.html'
+}
+
+// Carrega usuários ao abrir
+carregarUsuarios()
+</script>
+
+</body>
+</html>
