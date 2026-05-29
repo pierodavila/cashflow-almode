@@ -125,6 +125,12 @@ const auth = {
 // Verifica ao carregar
 const usuarioAtual = auth.check()
 </script>
+  <script>
+    (function() {
+      var s = JSON.parse(localStorage.getItem('cf_sessao_usuario') || '{}');
+      if (!s.logado) { window.location.replace('login.html'); }
+    })();
+  </script>
 </head>
 <body>
 
@@ -527,5 +533,12 @@ function showToast(msg) {
 function showLoading(txt) { document.getElementById('loadingTxt').textContent=txt; document.getElementById('loading').classList.add('show') }
 function hideLoading() { document.getElementById('loading').classList.remove('show') }
 </script>
+
+  <script>
+    function cfSair() {
+      localStorage.removeItem('cf_sessao_usuario');
+      window.location.href = 'login.html';
+    }
+  </script>
 </body>
 </html>
