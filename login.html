@@ -159,45 +159,19 @@
       border-top: 1px solid #e0e0e0;
     }
 
-    .demo-users {
-      background: #f0f7ff;
+    .info-box {
+      background: #e3f2fd;
       padding: 15px;
       border-radius: 8px;
       margin-bottom: 20px;
       font-size: 13px;
-      color: #1976d2;
+      color: #1565c0;
+      border-left: 4px solid #1976d2;
     }
 
-    .demo-users strong {
+    .info-box strong {
       display: block;
       margin-bottom: 8px;
-    }
-
-    .demo-user {
-      margin: 5px 0;
-      padding: 5px;
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 3px 8px;
-      background: #1976d2;
-      color: white;
-      border-radius: 3px;
-      font-size: 11px;
-      margin-left: 5px;
-    }
-
-    .badge.admin {
-      background: #f44336;
-    }
-
-    .badge.gerente {
-      background: #ff9800;
-    }
-
-    .badge.vendedor {
-      background: #4caf50;
     }
 
     @media (max-width: 480px) {
@@ -221,34 +195,20 @@
   <!-- HEADER -->
   <div class="login-header">
     <h1>💰 CashFlow</h1>
-    <p>Gestão de Cashback - Sistema de Login</p>
+    <p>Gestão de Cashback - Login Seguro</p>
   </div>
 
   <!-- FORM -->
   <div class="login-form">
-    <!-- DEMO USERS -->
-    <div class="demo-users">
-      <strong>👤 Usuários de Teste:</strong>
-      <div class="demo-user">
-        piero/piero123 <span class="badge admin">Admin</span>
-      </div>
-      <div class="demo-user">
-        forum/forum123 <span class="badge gerente">Gerente</span>
-      </div>
-      <div class="demo-user">
-        colcci/colcci123 <span class="badge gerente">Gerente</span>
-      </div>
-      <div class="demo-user">
-        triton/triton123 <span class="badge gerente">Gerente</span>
-      </div>
-      <div class="demo-user">
-        carlos/carlos123 <span class="badge vendedor">Vendedor</span>
-      </div>
+    <!-- INFO BOX -->
+    <div class="info-box">
+      <strong>ℹ️ Instruções:</strong>
+      Digite seu login. A senha será verificada automaticamente.
     </div>
 
     <!-- ERROR MESSAGE -->
     <div id="errorMessage" class="error-message">
-      ❌ Login ou senha incorretos!
+      ❌ Login não encontrado!
     </div>
 
     <!-- LOADING -->
@@ -260,13 +220,15 @@
     <!-- LOGIN FORM -->
     <form id="loginForm" onsubmit="handleLogin(event)">
       <div class="form-group">
-        <label for="username">👤 Usuário</label>
-        <input type="text" id="username" placeholder="Ex: piero" required autofocus>
-      </div>
-
-      <div class="form-group">
-        <label for="password">🔒 Senha</label>
-        <input type="password" id="password" placeholder="Ex: piero123" required>
+        <label for="username">👤 Login</label>
+        <input 
+          type="text" 
+          id="username" 
+          placeholder="Digite seu login (ex: piero)" 
+          required 
+          autofocus
+          autocomplete="username"
+        >
       </div>
 
       <button type="submit" class="btn-login">🔓 Entrar</button>
@@ -275,7 +237,8 @@
 
   <!-- FOOTER -->
   <div class="login-footer">
-    <p>💡 Sistema seguro de autenticação com controle de acesso por papel</p>
+    <p>🔒 Sistema seguro com controle de acesso por papel</p>
+    <p style="margin-top: 10px; font-size: 12px;">💡 Logins disponíveis: piero, forum, colcci, triton, carlos, ana, joao</p>
   </div>
 </div>
 
@@ -288,7 +251,6 @@
 const usuarios = {
   // Admins
   'piero': {
-    senha: 'piero123',
     tipo: 'admin',
     nome: 'Piero Davila',
     loja: null,
@@ -297,21 +259,18 @@ const usuarios = {
 
   // Gerentes das Lojas
   'forum': {
-    senha: 'forum123',
     tipo: 'gerente',
     nome: 'Gerente Forum',
     loja: 'FORUM OUTLET',
     redireciona: 'rfm.html'
   },
   'colcci': {
-    senha: 'colcci123',
     tipo: 'gerente',
     nome: 'Gerente Colcci',
     loja: 'COLCCI OUTLET OPRJ',
     redireciona: 'rfm.html'
   },
   'triton': {
-    senha: 'triton123',
     tipo: 'gerente',
     nome: 'Gerente Triton',
     loja: 'TRITON OUTLET',
@@ -320,21 +279,18 @@ const usuarios = {
 
   // Vendedores
   'carlos': {
-    senha: 'carlos123',
     tipo: 'vendedor',
     nome: 'Carlos Silva',
     loja: 'FORUM OUTLET',
     redireciona: 'contatos-pos-venda.html'
   },
   'ana': {
-    senha: 'ana123',
     tipo: 'vendedor',
     nome: 'Ana Santos',
     loja: 'COLCCI OUTLET OPRJ',
     redireciona: 'contatos-pos-venda.html'
   },
   'joao': {
-    senha: 'joao123',
     tipo: 'vendedor',
     nome: 'João Oliveira',
     loja: 'TRITON OUTLET',
@@ -345,8 +301,7 @@ const usuarios = {
 async function handleLogin(event) {
   event.preventDefault();
 
-  const username = document.getElementById('username').value.toLowerCase();
-  const password = document.getElementById('password').value;
+  const username = document.getElementById('username').value.toLowerCase().trim();
   const errorMsg = document.getElementById('errorMessage');
   const loadingMsg = document.getElementById('loadingMessage');
   const loginForm = document.getElementById('loginForm');
@@ -354,12 +309,13 @@ async function handleLogin(event) {
   // Limpar mensagem de erro
   errorMsg.style.display = 'none';
 
-  // Validar credenciais
+  // Validar usuário
   const usuario = usuarios[username];
   
-  if (!usuario || usuario.senha !== password) {
-    errorMsg.textContent = '❌ Login ou senha incorretos!';
+  if (!usuario) {
+    errorMsg.textContent = '❌ Login não encontrado! Verifique se digitou corretamente.';
     errorMsg.style.display = 'block';
+    document.getElementById('username').focus();
     return;
   }
 
@@ -385,7 +341,7 @@ async function handleLogin(event) {
   // Log de auditoria
   console.log(`✅ ${usuario.tipo.toUpperCase()} ${usuario.nome} fez login em ${new Date().toLocaleString('pt-BR')}`);
 
-  // Redirecionar baseado no tipo
+  // Redirecionar
   console.log(`🔄 Redirecionando para: ${usuario.redireciona}`);
   
   setTimeout(() => {
@@ -417,9 +373,7 @@ window.addEventListener('DOMContentLoaded', () => {
 // Tecla ENTER para submit
 document.getElementById('loginForm').addEventListener('keypress', (e) => {
   if (e.key === 'Enter') {
-    e.preventDefault();
-    document.getElementById('username').blur();
-    document.getElementById('password').blur();
+    document.getElementById('loginForm').dispatchEvent(new Event('submit'));
   }
 });
 </script>
