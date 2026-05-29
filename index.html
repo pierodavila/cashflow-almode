@@ -610,8 +610,14 @@ const AutoSync = {
 
   // Utilitários
   getCfg() {
-    const raw = localStorage.getItem('cf_config')
-    return raw ? JSON.parse(raw) : {}
+    // Merge de cf_almode_cfg (token/domain) + cf_config_v2 (validade/cashbackPct)
+    const c1 = JSON.parse(localStorage.getItem('cf_almode_cfg') || '{}')
+    const c2 = JSON.parse(localStorage.getItem('cf_config_v2') || '{}')
+    const merged = { ...c2, ...c1 }
+    // Normalizar pct (pode estar como pct ou cashbackPct)
+    if (!merged.pct && merged.cashbackPct) merged.pct = merged.cashbackPct
+    if (!merged.validade) merged.validade = 180
+    return merged
   },
 
   atualizarBadge() {
@@ -788,10 +794,13 @@ function salvarToken() {
     alert('Cole o token antes')
     return
   }
+  // Preservar pct e validade que já estavam salvos
+  const cfgExistente = JSON.parse(localStorage.getItem('cf_almode_cfg') || '{}')
   const cfg = {
     domain: 'swn.almode.store',
     token: token,
-    pct: 5
+    pct: cfgExistente.pct || 5,
+    validade: cfgExistente.validade || 180
   }
   localStorage.setItem('cf_almode_cfg', JSON.stringify(cfg))
   document.getElementById('loginModal').style.display = 'none'
