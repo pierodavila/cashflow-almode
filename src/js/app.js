@@ -42,7 +42,8 @@ export function onSaveConfig() {
     domain: val('cfDomain').replace(/^https?:\/\//, '').replace(/\/$/, ''),
     token: val('cfToken'),
     cnpj: val('cfCnpj').replace(/\D/g, ''),
-    cashbackPct: parseFloat(val('cfPct')) || 5
+    cashbackPct: parseFloat(val('cfPct')) || 5,
+    validade: parseInt(val('cfValidade')) || 180
   }
   saveConfig(cfg)
   Almode.setConfig(cfg)
@@ -239,4 +240,5 @@ function _fillConfigInputs(cfg) {
   set('cfToken', cfg.token)
   set('cfCnpj', cfg.cnpj)
   set('cfPct', cfg.cashbackPct || 5)
+  set('cfValidade', cfg.validade || 180)
 }
