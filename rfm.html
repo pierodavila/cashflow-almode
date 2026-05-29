@@ -272,8 +272,28 @@ const ACOES = {
     return
   }
   showLoading('Calculando RFM...')
+
+  // Auto-filtrar por loja se for gerente
+  const _sessaoRFM = JSON.parse(localStorage.getItem('cf_sessao_usuario') || '{}')
+  if (_sessaoRFM.tipo === 'gerente' && _sessaoRFM.loja) {
+    const selLoja = document.getElementById('filtroLoja')
+    if (selLoja) selLoja.value = _sessaoRFM.loja
+    // Esconder o seletor de loja (gerente vê só a sua)
+    if (selLoja && selLoja.parentElement) {
+      selLoja.disabled = true
+      selLoja.title = 'Acesso restrito à sua loja'
+    }
+  }
+
   setTimeout(() => {
-    clientesFiltrados = todosClientes
+    const lojaFiltro = _sessaoRFM.tipo === 'gerente' ? _sessaoRFM.loja : ''
+    clientesFiltrados = lojaFiltro
+      ? todosClientes.filter(c => c.loja === lojaFiltro)
+      : todosClientes
+    if (lojaFiltro) {
+      const info = document.getElementById('filtroInfo')
+      if (info) info.textContent = clientesFiltrados.length + ' clientes em ' + lojaFiltro
+    }
     clientesRFM = calcularRFM(clientesFiltrados)
     renderStats()
     renderSegGrid()
