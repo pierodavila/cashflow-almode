@@ -25,9 +25,19 @@
     }
 
     header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .header-content {
       text-align: center;
       color: white;
-      margin-bottom: 30px;
+      flex: 1;
+      min-width: 300px;
     }
 
     header h1 {
@@ -37,6 +47,27 @@
       align-items: center;
       justify-content: center;
       gap: 10px;
+    }
+
+    .btn-voltar {
+      background: #2196F3;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-voltar:hover {
+      background: #0b7dda;
+      transform: translateY(-2px);
     }
 
     .loading-spinner {
@@ -95,6 +126,7 @@
       overflow: hidden;
       box-shadow: 0 4px 15px rgba(0,0,0,0.1);
       margin-bottom: 30px;
+      overflow-x: auto;
     }
 
     table {
@@ -114,6 +146,7 @@
       font-size: 12px;
       text-transform: uppercase;
       border-bottom: 2px solid #ddd;
+      white-space: nowrap;
     }
 
     td {
@@ -149,6 +182,12 @@
       color: #e65100;
     }
 
+    .progress-info {
+      font-size: 13px;
+      color: #666;
+      margin-top: 5px;
+    }
+
     .empty-state {
       text-align: center;
       padding: 40px;
@@ -156,8 +195,17 @@
     }
 
     @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+      }
+
       header h1 {
         font-size: 24px;
+      }
+
+      .btn-voltar {
+        width: 100%;
+        justify-content: center;
       }
 
       table {
@@ -175,14 +223,17 @@
 <div class="container">
   <!-- HEADER -->
   <header>
-    <h1>📊 Gestão de Vendedores</h1>
-    <p style="font-size: 14px; color: #aaa;">Acompanhamento de desempenho e atividades dos vendedores</p>
+    <div class="header-content">
+      <h1>📊 Gestão de Vendedores</h1>
+      <p style="font-size: 14px; color: #aaa;">Acompanhamento de desempenho e contatos dos vendedores</p>
+    </div>
+    <button class="btn-voltar" onclick="window.location.href='index.html'">← Voltar ao Dashboard</button>
   </header>
 
   <!-- LOADING -->
   <div id="loadingState" class="loading-spinner">
     <div class="spinner"></div>
-    <p>Carregando dados dos vendedores do Supabase...</p>
+    <p>Carregando dados dos vendedores...</p>
   </div>
 
   <!-- CONTENT (Hidden until data loads) -->
@@ -202,7 +253,7 @@
         <div class="number" id="totalVendas">—</div>
       </div>
       <div class="stat-card">
-        <h3>💰 Cashback Gerado</h3>
+        <h3>💳 Cashback Gerado</h3>
         <div class="number" id="totalCashback">—</div>
       </div>
     </div>
@@ -216,15 +267,18 @@
             <th>👤 Vendedor</th>
             <th>🏪 Loja</th>
             <th>👥 Clientes</th>
+            <th>📞 Contatados</th>
+            <th>⏳ Faltam Contatar</th>
+            <th>📊 Taxa</th>
             <th>💰 Total Vendas</th>
             <th>💵 Ticket Médio</th>
-            <th>💳 Cashback Gerado</th>
+            <th>💳 Cashback</th>
             <th>📅 Última Venda</th>
           </tr>
         </thead>
         <tbody id="tabelaPrincipal">
           <tr>
-            <td colspan="7" class="empty-state">Carregando...</td>
+            <td colspan="10" class="empty-state">Carregando...</td>
           </tr>
         </tbody>
       </table>
@@ -236,15 +290,16 @@
 <script>
 const App = {
   vendedores: [],
+  contatos: {},
 
   async init() {
-    console.log('🚀 Iniciando painel de gestão de vendedores (Supabase)...');
+    console.log('🚀 Iniciando painel de gestão de vendedores v3...');
     
     try {
       await this.carregarDadosSupabase();
+      await this.carregarContatosLocalStorage();
       this.atualizarUI();
       
-      // Mostrar conteúdo
       document.getElementById('loadingState').style.display = 'none';
       document.getElementById('contentState').style.display = 'block';
     } catch (erro) {
@@ -252,7 +307,7 @@ const App = {
       document.getElementById('loadingState').innerHTML = `
         <h2 style="color: #f44336; margin-top: 20px;">❌ Erro ao carregar dados</h2>
         <p style="color: #ccc; margin-top: 10px;">${erro.message}</p>
-        <p style="color: #999; margin-top: 10px; font-size: 12px;">Recarregue a página</p>
+        <button class="btn-voltar" onclick="location.reload()">🔄 Recarregar</button>
       `;
     }
   },
@@ -266,7 +321,7 @@ const App = {
       'Content-Type': 'application/json'
     };
 
-    console.log('📥 Buscando vendedores no Supabase...');
+    console.log('📥 Buscando dados do Supabase...');
 
     const url = `${SUPABASE_URL}/rest/v1/cf_vendedores?select=*`;
     const response = await fetch(url, { headers });
@@ -277,6 +332,13 @@ const App = {
 
     this.vendedores = await response.json();
     console.log(`✅ ${this.vendedores.length} vendedores carregados`);
+  },
+
+  carregarContatosLocalStorage() {
+    console.log('📂 Buscando contatos do localStorage...');
+    const dadosContatos = JSON.parse(localStorage.getItem('cf_contatos_pos_venda') || '{}');
+    this.contatos = dadosContatos || {};
+    console.log(`✅ ${Object.keys(this.contatos).length} contatos carregados`);
   },
 
   atualizarUI() {
@@ -300,19 +362,37 @@ const App = {
     const tbody = document.getElementById('tabelaPrincipal');
 
     if (this.vendedores.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nenhum vendedor encontrado</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="10" class="empty-state">Nenhum vendedor encontrado</td></tr>';
       return;
     }
 
     tbody.innerHTML = this.vendedores.map(v => {
       const ultimaVenda = v.ultima_venda ? new Date(v.ultima_venda).toLocaleDateString('pt-BR') : '—';
       const ticketMedio = v.clientes_unicos > 0 ? (v.total_valor / v.clientes_unicos).toFixed(2) : 0;
+      
+      // Contar contatos deste vendedor
+      const contatosVendedor = Object.values(this.contatos).filter(c => c.vendedor === v.login);
+      const contatosRealizados = contatosVendedor.filter(c => c.contatado === true).length;
+      const faltamContatar = v.clientes_unicos - contatosRealizados;
+      const taxaContato = v.clientes_unicos > 0 ? ((contatosRealizados / v.clientes_unicos) * 100).toFixed(1) : 0;
+
+      let statusBadge = '';
+      if (taxaContato >= 80) {
+        statusBadge = `<span class="status-badge status-positivo">${taxaContato}%</span>`;
+      } else if (taxaContato >= 50) {
+        statusBadge = `<span class="status-badge status-atencao">${taxaContato}%</span>`;
+      } else {
+        statusBadge = `<span class="status-badge status-critico">${taxaContato}%</span>`;
+      }
 
       return `
         <tr>
           <td><strong>${v.login || v.nome}</strong></td>
           <td>${v.loja || '—'}</td>
           <td>${v.clientes_unicos || 0}</td>
+          <td><strong style="color: #4CAF50;">✅ ${contatosRealizados}</strong></td>
+          <td><strong style="color: #ff9800;">⏳ ${faltamContatar}</strong></td>
+          <td>${statusBadge}</td>
           <td>R$ ${(v.total_valor || 0).toFixed(2).replace('.', ',')}</td>
           <td>R$ ${ticketMedio.toString().replace('.', ',')}</td>
           <td><strong style="color: #4CAF50;">R$ ${(v.cashback_gerado || 0).toFixed(2).replace('.', ',')}</strong></td>
@@ -323,7 +403,6 @@ const App = {
   }
 };
 
-// Inicializar quando a página carregar
 document.addEventListener('DOMContentLoaded', () => App.init());
 </script>
 
