@@ -125,6 +125,12 @@ main{padding:28px 32px;max-width:1300px;margin:0 auto}
 .toast{position:fixed;bottom:24px;right:24px;background:var(--s);border:1px solid var(--bd);border-radius:10px;padding:12px 18px;font-size:13px;z-index:9999;transform:translateY(80px);opacity:0;transition:all .25s cubic-bezier(.34,1.56,.64,1);box-shadow:0 8px 24px rgba(0,0,0,.4)}
 .toast.show{transform:none;opacity:1}
 </style>
+  <script>
+    (function() {
+      var s = JSON.parse(localStorage.getItem('cf_sessao_usuario') || '{}');
+      if (!s.logado) { window.location.replace('login.html'); }
+    })();
+  </script>
 </head>
 <body>
 
@@ -832,5 +838,12 @@ function fmtCpf(v) { const d=(v||'').replace(/\D/g,''); return d.length===11?d.r
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;') }
 function toast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3200) }
 </script>
+
+  <script>
+    function cfSair() {
+      localStorage.removeItem('cf_sessao_usuario');
+      window.location.href = 'login.html';
+    }
+  </script>
 </body>
 </html>
