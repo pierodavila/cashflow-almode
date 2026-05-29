@@ -3,408 +3,220 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>📊 Gestão de Vendedores - CashFlow</title>
+  <title>📊 Gestão de Vendedores</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-      color: #333;
-      min-height: 100vh;
-      padding: 20px;
-    }
-
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 30px;
-      flex-wrap: wrap;
-      gap: 20px;
-    }
-
-    .header-content {
-      text-align: center;
-      color: white;
-      flex: 1;
-      min-width: 300px;
-    }
-
-    header h1 {
-      font-size: 32px;
-      margin-bottom: 5px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-    }
-
-    .btn-voltar {
-      background: #2196F3;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.3s;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .btn-voltar:hover {
-      background: #0b7dda;
-      transform: translateY(-2px);
-    }
-
-    .loading-spinner {
-      text-align: center;
-      padding: 40px;
-      color: white;
-    }
-
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #4CAF50;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 20px;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    .dashboard-stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
-      margin-bottom: 30px;
-    }
-
-    .stat-card {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      text-align: center;
-    }
-
-    .stat-card h3 {
-      color: #666;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 10px;
-    }
-
-    .stat-card .number {
-      font-size: 36px;
-      font-weight: bold;
-      color: #4CAF50;
-    }
-
-    .table-container {
-      background: white;
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      margin-bottom: 30px;
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    thead {
-      background: #f5f5f5;
-    }
-
-    th {
-      padding: 15px;
-      text-align: left;
-      font-weight: bold;
-      color: #333;
-      font-size: 12px;
-      text-transform: uppercase;
-      border-bottom: 2px solid #ddd;
-      white-space: nowrap;
-    }
-
-    td {
-      padding: 15px;
-      border-bottom: 1px solid #eee;
-    }
-
-    tbody tr:hover {
-      background: #f9f9f9;
-    }
-
-    .status-badge {
-      display: inline-block;
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: bold;
-      text-transform: uppercase;
-    }
-
-    .status-positivo {
-      background: #c8e6c9;
-      color: #2e7d32;
-    }
-
-    .status-critico {
-      background: #ffcdd2;
-      color: #c62828;
-    }
-
-    .status-atencao {
-      background: #ffe0b2;
-      color: #e65100;
-    }
-
-    .progress-info {
-      font-size: 13px;
-      color: #666;
-      margin-top: 5px;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 40px;
-      color: #999;
-    }
-
-    @media (max-width: 768px) {
-      header {
-        flex-direction: column;
-      }
-
-      header h1 {
-        font-size: 24px;
-      }
-
-      .btn-voltar {
-        width: 100%;
-        justify-content: center;
-      }
-
-      table {
-        font-size: 12px;
-      }
-
-      th, td {
-        padding: 10px;
-      }
-    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#1a1a2e,#16213e);min-height:100vh;padding:20px;color:#333}
+    .container{max-width:1400px;margin:0 auto}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+    .header-title{color:white}
+    .header-title h1{font-size:28px;display:flex;align-items:center;gap:10px}
+    .header-title p{color:#aaa;font-size:13px;margin-top:4px}
+    .btn{padding:10px 18px;border:none;border-radius:8px;font-size:14px;font-weight:bold;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+    .btn-voltar{background:#2196F3;color:white}
+    .btn-voltar:hover{background:#0b7dda;transform:translateY(-1px)}
+    .btn-sair{background:#555;color:white}
+    .btn-sair:hover{background:#333}
+    .btn-primary{background:#4CAF50;color:white}
+    .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px}
+    .stat{background:white;padding:18px;border-radius:10px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.1)}
+    .stat h3{color:#888;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+    .stat .n{font-size:32px;font-weight:bold;color:#4CAF50}
+    .stat.warn .n{color:#ff9800}
+    .tabela-wrap{background:white;border-radius:10px;overflow:auto;box-shadow:0 4px 15px rgba(0,0,0,.1)}
+    table{width:100%;border-collapse:collapse;min-width:900px}
+    thead{background:#f5f5f5}
+    th{padding:13px 14px;text-align:left;font-size:11px;text-transform:uppercase;color:#555;border-bottom:2px solid #e0e0e0;white-space:nowrap}
+    td{padding:13px 14px;border-bottom:1px solid #f0f0f0;font-size:13px}
+    tr:hover{background:#fafafa}
+    .badge{display:inline-block;padding:5px 10px;border-radius:20px;font-size:11px;font-weight:bold}
+    .badge-ok{background:#c8e6c9;color:#2e7d32}
+    .badge-warn{background:#ffe0b2;color:#e65100}
+    .badge-bad{background:#ffcdd2;color:#c62828}
+    .empty{text-align:center;padding:40px;color:#999}
+    .spinner{width:36px;height:36px;border:4px solid #f3f3f3;border-top:4px solid #4CAF50;border-radius:50%;animation:spin 1s linear infinite;margin:40px auto 12px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loading{text-align:center;color:white}
+    .progress{width:100%;height:8px;background:#eee;border-radius:4px;overflow:hidden;margin-top:6px}
+    .progress-bar{height:100%;background:#4CAF50;transition:width .3s}
+    .progress-bar.warn{background:#ff9800}
+    .progress-bar.bad{background:#f44336}
   </style>
 </head>
 <body>
-
 <div class="container">
-  <!-- HEADER -->
   <header>
-    <div class="header-content">
+    <div class="header-title">
       <h1>📊 Gestão de Vendedores</h1>
-      <p style="font-size: 14px; color: #aaa;">Acompanhamento de desempenho e contatos dos vendedores</p>
+      <p>Acompanhamento de contatos pós-venda por vendedor</p>
     </div>
-    <button class="btn-voltar" onclick="window.location.href='index.html'">← Voltar ao Dashboard</button>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" onclick="App.exportar()">📥 CSV</button>
+      <button class="btn btn-voltar" onclick="location.href='index.html'">← Dashboard</button>
+      <button class="btn btn-sair" onclick="App.sair()">🚪 Sair</button>
+    </div>
   </header>
 
-  <!-- LOADING -->
-  <div id="loadingState" class="loading-spinner">
+  <div id="loadingState" class="loading">
     <div class="spinner"></div>
-    <p>Carregando dados dos vendedores...</p>
+    <p>Carregando dados...</p>
   </div>
 
-  <!-- CONTENT (Hidden until data loads) -->
-  <div id="contentState" style="display: none;">
-    <!-- DASHBOARD STATS -->
-    <div class="dashboard-stats">
-      <div class="stat-card">
-        <h3>👥 Total de Vendedores</h3>
-        <div class="number" id="totalVendedores">—</div>
-      </div>
-      <div class="stat-card">
-        <h3>📞 Total de Clientes</h3>
-        <div class="number" id="totalClientes">—</div>
-      </div>
-      <div class="stat-card">
-        <h3>📊 Total de Vendas</h3>
-        <div class="number" id="totalVendas">—</div>
-      </div>
-      <div class="stat-card">
-        <h3>💳 Cashback Gerado</h3>
-        <div class="number" id="totalCashback">—</div>
-      </div>
+  <div id="appContent" style="display:none">
+    <div class="stats">
+      <div class="stat"><h3>👥 Vendedores</h3><div class="n" id="sVend">—</div></div>
+      <div class="stat"><h3>👤 Clientes (30d)</h3><div class="n" id="sClientes">—</div></div>
+      <div class="stat"><h3>✅ Contatados</h3><div class="n" id="sCont">—</div></div>
+      <div class="stat warn"><h3>⏳ Pendentes</h3><div class="n" id="sPend">—</div></div>
     </div>
 
-    <!-- TABELA PRINCIPAL -->
-    <div class="table-container">
-      <h2 style="padding: 20px 20px 0; color: #333;">📈 Desempenho dos Vendedores</h2>
+    <div class="tabela-wrap">
       <table>
-        <thead>
-          <tr>
-            <th>👤 Vendedor</th>
-            <th>🏪 Loja</th>
-            <th>👥 Clientes</th>
-            <th>📞 Contatados</th>
-            <th>⏳ Faltam Contatar</th>
-            <th>📊 Taxa</th>
-            <th>💰 Total Vendas</th>
-            <th>💵 Ticket Médio</th>
-            <th>💳 Cashback</th>
-            <th>📅 Última Venda</th>
-          </tr>
-        </thead>
-        <tbody id="tabelaPrincipal">
-          <tr>
-            <td colspan="10" class="empty-state">Carregando...</td>
-          </tr>
-        </tbody>
+        <thead><tr>
+          <th>👤 Vendedor</th>
+          <th>🏪 Loja</th>
+          <th>👥 Clientes 30d</th>
+          <th>✅ Contatados</th>
+          <th>⏳ Faltam</th>
+          <th>📊 Taxa Contato</th>
+          <th>💰 Total Vendas</th>
+          <th>💵 Ticket Médio</th>
+          <th>📅 Última Venda</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
       </table>
     </div>
   </div>
 </div>
 
-<!-- SCRIPT -->
 <script>
+const SB_URL = 'https://gudhgyfaizueshafhqvc.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZGhneWZhaXp1ZXNoYWZocXZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2ODgzNDksImV4cCI6MjA5NTI2NDM0OX0.LrUMZ6XnQFqvmDMn1n5vkdS5FIgTY8j-tnsMH_dtA08';
+const H = {'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY};
+
 const App = {
-  vendedores: [],
-  contatos: {},
+  vendedores: [], clientes30d: [], contatos: {}, dados: [],
 
   async init() {
-    console.log('🚀 Iniciando painel de gestão de vendedores v3...');
-    
-    try {
-      await this.carregarDadosSupabase();
-      await this.carregarContatosLocalStorage();
-      this.atualizarUI();
-      
-      document.getElementById('loadingState').style.display = 'none';
-      document.getElementById('contentState').style.display = 'block';
-    } catch (erro) {
-      console.error('❌ Erro ao carregar dados:', erro);
-      document.getElementById('loadingState').innerHTML = `
-        <h2 style="color: #f44336; margin-top: 20px;">❌ Erro ao carregar dados</h2>
-        <p style="color: #ccc; margin-top: 10px;">${erro.message}</p>
-        <button class="btn-voltar" onclick="location.reload()">🔄 Recarregar</button>
-      `;
-    }
+    const sessao = JSON.parse(localStorage.getItem('cf_sessao_usuario') || '{}');
+    if (!sessao.logado) { location.href = 'login.html'; return; }
+
+    await Promise.all([
+      this.carregarVendedores(),
+      this.carregarClientes30d(sessao),
+      this.carregarContatos()
+    ]);
+    this.calcular();
+    this.render();
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('appContent').style.display = 'block';
   },
 
-  async carregarDadosSupabase() {
-    const SUPABASE_URL = 'https://gudhgyfaizueshafhqvc.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZGhneWZhaXp1ZXNoYWZocXZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2ODgzNDksImV4cCI6MjA5NTI2NDM0OX0.LrUMZ6XnQFqvmDMn1n5vkdS5FIgTY8j-tnsMH_dtA08';
-
-    const headers = {
-      'apikey': SUPABASE_KEY,
-      'Content-Type': 'application/json'
-    };
-
-    console.log('📥 Buscando dados do Supabase...');
-
-    const url = `${SUPABASE_URL}/rest/v1/cf_vendedores?select=*`;
-    const response = await fetch(url, { headers });
-
-    if (!response.ok) {
-      throw new Error(`Erro ao buscar vendedores: ${response.status}`);
-    }
-
-    this.vendedores = await response.json();
-    console.log(`✅ ${this.vendedores.length} vendedores carregados`);
+  async carregarVendedores() {
+    const r = await fetch(`${SB_URL}/rest/v1/cf_vendedores?select=*`, {headers: H});
+    if (r.ok) this.vendedores = await r.json();
   },
 
-  carregarContatosLocalStorage() {
-    console.log('📂 Buscando contatos do localStorage...');
-    const dadosContatos = JSON.parse(localStorage.getItem('cf_contatos_pos_venda') || '{}');
-    this.contatos = dadosContatos || {};
-    console.log(`✅ ${Object.keys(this.contatos).length} contatos carregados`);
-  },
-
-  atualizarUI() {
-    this.atualizarEstatisticas();
-    this.atualizarTabela();
-  },
-
-  atualizarEstatisticas() {
-    const totalVendedores = this.vendedores.length;
-    const totalClientes = this.vendedores.reduce((sum, v) => sum + (v.clientes_unicos || 0), 0);
-    const totalVendas = this.vendedores.reduce((sum, v) => sum + (v.total_valor || 0), 0);
-    const totalCashback = this.vendedores.reduce((sum, v) => sum + (v.cashback_gerado || 0), 0);
-
-    document.getElementById('totalVendedores').textContent = totalVendedores;
-    document.getElementById('totalClientes').textContent = totalClientes;
-    document.getElementById('totalVendas').textContent = `R$ ${totalVendas.toFixed(2).replace('.', ',')}`;
-    document.getElementById('totalCashback').textContent = `R$ ${totalCashback.toFixed(2).replace('.', ',')}`;
-  },
-
-  atualizarTabela() {
-    const tbody = document.getElementById('tabelaPrincipal');
-
-    if (this.vendedores.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="10" class="empty-state">Nenhum vendedor encontrado</td></tr>';
-      return;
-    }
-
-    tbody.innerHTML = this.vendedores.map(v => {
-      const ultimaVenda = v.ultima_venda ? new Date(v.ultima_venda).toLocaleDateString('pt-BR') : '—';
-      const ticketMedio = v.clientes_unicos > 0 ? (v.total_valor / v.clientes_unicos).toFixed(2) : 0;
-      
-      // Contar contatos deste vendedor
-      const contatosVendedor = Object.values(this.contatos).filter(c => c.vendedor === v.login);
-      const contatosRealizados = contatosVendedor.filter(c => c.contatado === true).length;
-      const faltamContatar = v.clientes_unicos - contatosRealizados;
-      const taxaContato = v.clientes_unicos > 0 ? ((contatosRealizados / v.clientes_unicos) * 100).toFixed(1) : 0;
-
-      let statusBadge = '';
-      if (taxaContato >= 80) {
-        statusBadge = `<span class="status-badge status-positivo">${taxaContato}%</span>`;
-      } else if (taxaContato >= 50) {
-        statusBadge = `<span class="status-badge status-atencao">${taxaContato}%</span>`;
-      } else {
-        statusBadge = `<span class="status-badge status-critico">${taxaContato}%</span>`;
+  async carregarClientes30d(sessao) {
+    const local = JSON.parse(localStorage.getItem('cf_clientes_v2') || '{}');
+    let todos = local.clientes || [];
+    if (!todos.length) {
+      let arr = [], p = 0;
+      while (true) {
+        const r = await fetch(`${SB_URL}/rest/v1/cf_clientes?select=*&limit=1000&offset=${p*1000}`, {headers: H});
+        const d = await r.json();
+        if (!d.length) break;
+        arr.push(...d); p++;
       }
+      localStorage.setItem('cf_clientes_v2', JSON.stringify({clientes: arr, _timestamp: Date.now()}));
+      todos = arr;
+    }
+    const corte = new Date(); corte.setDate(corte.getDate() - 30);
+    let filtrados = todos.filter(c => new Date(c.ultima_compra) >= corte);
+    if (sessao.tipo === 'gerente' && sessao.loja) filtrados = filtrados.filter(c => c.loja === sessao.loja);
+    this.clientes30d = filtrados;
+  },
 
-      return `
-        <tr>
-          <td><strong>${v.login || v.nome}</strong></td>
-          <td>${v.loja || '—'}</td>
-          <td>${v.clientes_unicos || 0}</td>
-          <td><strong style="color: #4CAF50;">✅ ${contatosRealizados}</strong></td>
-          <td><strong style="color: #ff9800;">⏳ ${faltamContatar}</strong></td>
-          <td>${statusBadge}</td>
-          <td>R$ ${(v.total_valor || 0).toFixed(2).replace('.', ',')}</td>
-          <td>R$ ${ticketMedio.toString().replace('.', ',')}</td>
-          <td><strong style="color: #4CAF50;">R$ ${(v.cashback_gerado || 0).toFixed(2).replace('.', ',')}</strong></td>
-          <td>${ultimaVenda}</td>
-        </tr>
-      `;
+  async carregarContatos() {
+    const r = await fetch(`${SB_URL}/rest/v1/cf_contatos_pos_venda?select=*`, {headers: H});
+    if (!r.ok) return;
+    const lista = await r.json();
+    this.contatos = {};
+    lista.forEach(c => { this.contatos[c.cpf] = c; });
+  },
+
+  calcular() {
+    const porVendedor = {};
+    this.clientes30d.forEach(c => {
+      const v = c.vendedor || '(sem vendedor)';
+      if (!porVendedor[v]) {
+        const vInfo = this.vendedores.find(x => x.login === v || x.nome === v) || {};
+        porVendedor[v] = {
+          nome: v, loja: c.loja || vInfo.loja || '—',
+          totalVendas: vInfo.total_valor || 0,
+          clientes_unicos: vInfo.clientes_unicos || 0,
+          ultimaVenda: vInfo.ultima_venda || null,
+          clientes30d: 0, contatados: 0
+        };
+      }
+      porVendedor[v].clientes30d++;
+      if (this.contatos[c.cpf]?.contatado) porVendedor[v].contatados++;
+    });
+    this.dados = Object.values(porVendedor).sort((a,b) => b.contatados - a.contatados);
+  },
+
+  render() {
+    const total = this.dados.reduce((s,v) => s+v.clientes30d, 0);
+    const contatados = this.dados.reduce((s,v) => s+v.contatados, 0);
+    document.getElementById('sVend').textContent = this.dados.length;
+    document.getElementById('sClientes').textContent = total;
+    document.getElementById('sCont').textContent = contatados;
+    document.getElementById('sPend').textContent = total - contatados;
+
+    const tbody = document.getElementById('tbody');
+    if (!this.dados.length) { tbody.innerHTML = '<tr><td colspan="9" class="empty">Nenhum dado encontrado</td></tr>'; return; }
+
+    tbody.innerHTML = this.dados.map(v => {
+      const taxa = v.clientes30d ? ((v.contatados / v.clientes30d) * 100).toFixed(0) : 0;
+      const barClass = taxa >= 80 ? '' : taxa >= 50 ? 'warn' : 'bad';
+      const badgeClass = taxa >= 80 ? 'badge-ok' : taxa >= 50 ? 'badge-warn' : 'badge-bad';
+      const ticket = v.clientes_unicos ? (v.totalVendas / v.clientes_unicos).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}) : '—';
+      const vendas = v.totalVendas ? v.totalVendas.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}) : '—';
+      const ultima = v.ultimaVenda ? new Date(v.ultimaVenda).toLocaleDateString('pt-BR') : '—';
+      return `<tr>
+        <td><strong>${v.nome}</strong></td>
+        <td>${v.loja}</td>
+        <td>${v.clientes30d}</td>
+        <td><strong style="color:#4CAF50">✅ ${v.contatados}</strong></td>
+        <td><strong style="color:#ff9800">⏳ ${v.clientes30d - v.contatados}</strong></td>
+        <td>
+          <span class="badge ${badgeClass}">${taxa}%</span>
+          <div class="progress"><div class="progress-bar ${barClass}" style="width:${taxa}%"></div></div>
+        </td>
+        <td>${vendas}</td>
+        <td>${ticket}</td>
+        <td>${ultima}</td>
+      </tr>`;
     }).join('');
+  },
+
+  exportar() {
+    let csv = 'Vendedor,Loja,Clientes 30d,Contatados,Faltam,Taxa,Total Vendas\n';
+    this.dados.forEach(v => {
+      const taxa = v.clientes30d ? ((v.contatados/v.clientes30d)*100).toFixed(0)+'%' : '0%';
+      csv += `"${v.nome}","${v.loja}",${v.clientes30d},${v.contatados},${v.clientes30d-v.contatados},"${taxa}","${v.totalVendas}"\n`;
+    });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+    a.download = 'gestao-vendedores-' + new Date().toISOString().split('T')[0] + '.csv';
+    a.click();
+  },
+
+  sair() {
+    localStorage.removeItem('cf_sessao_usuario');
+    location.href = 'login.html';
   }
 };
-
 document.addEventListener('DOMContentLoaded', () => App.init());
 </script>
-
-</body>
-</html>
+</body></html>
