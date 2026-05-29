@@ -99,6 +99,7 @@ tr:hover td{background:rgba(255,255,255,.015)}
   <div class="hdr-right">
     <a href="index.html" class="btn btn-ghost btn-sm">← Painel</a>
     <button class="btn btn-primary btn-sm" onclick="exportarExcel()">📊 Exportar</button>
+    <button class="btn btn-ghost btn-sm" onclick="cfSair()">🚪 Sair</button>
   </div>
 </header>
 
@@ -324,5 +325,31 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
       window.location.href = 'login.html';
     }
   </script>
+<script>
+// Auto-filtrar por loja para gerentes
+window.addEventListener('DOMContentLoaded', function() {
+  const s = JSON.parse(localStorage.getItem('cf_sessao_usuario') || '{}')
+  if (s.tipo === 'gerente' && s.loja) {
+    // Esperar os dados carregarem
+    setTimeout(() => {
+      // Encontrar e clicar no botão de filtro da loja certa
+      document.querySelectorAll('.filtro-btn').forEach(btn => {
+        const texto = btn.textContent.trim()
+        if (s.loja.includes('FORUM') && texto === 'Forum') btn.click()
+        else if (s.loja.includes('COLCCI') && texto === 'Colcci') btn.click()
+        else if (s.loja.includes('TRITON') && texto === 'Triton') btn.click()
+        // Desabilitar outros botões
+        if (texto !== 'Todas' && !s.loja.includes(texto.toUpperCase())) {
+          btn.style.display = 'none'
+        }
+      })
+      // Esconder botão "Todas" para gerente
+      document.querySelectorAll('.filtro-btn').forEach(btn => {
+        if (btn.textContent.trim() === 'Todas') btn.style.display = 'none'
+      })
+    }, 800)
+  }
+})
+</script>
 </body>
 </html>
