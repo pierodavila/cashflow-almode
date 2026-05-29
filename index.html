@@ -123,7 +123,14 @@ const usuarioAtual = auth.check(true)
       </div>
       <button class="btn-save" onclick="App.onSaveConfig()">💾 Salvar Configuração</button>
     </div>
-  </aside>
+  
+    <div style="padding:16px;border-top:1px solid #333;margin-top:auto">
+      <button onclick="localStorage.removeItem('cf_sessao_usuario');location.href='login.html'"
+        style="width:100%;padding:10px;background:#444;color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:bold">
+        🚪 Sair
+      </button>
+    </div>
+    </aside>
 
   <!-- MAIN -->
   <main class="main">
