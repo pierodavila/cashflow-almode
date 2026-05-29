@@ -109,6 +109,12 @@ const auth = {
 
 const usuarioAtual = auth.check()
 </script>
+  <script>
+    (function() {
+      var s = JSON.parse(localStorage.getItem('cf_sessao_usuario') || '{}');
+      if (!s.logado) { window.location.replace('login.html'); }
+    })();
+  </script>
 </head>
 <body>
 
@@ -418,5 +424,12 @@ function fmtCpf(v){const d=(v||'').replace(/\D/g,'');return d.length===11?d.repl
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
 </script>
+
+  <script>
+    function cfSair() {
+      localStorage.removeItem('cf_sessao_usuario');
+      window.location.href = 'login.html';
+    }
+  </script>
 </body>
 </html>
