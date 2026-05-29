@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📞 Contatos Pós-Venda - CashFlow</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #333;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      color: white;
+      margin-bottom: 30px;
+    }
+
+    header h1 {
+      font-size: 32px;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .dashboard-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .stat-card h3 {
+      color: #666;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+
+    .stat-card .number {
+      font-size: 36px;
+      font-weight: bold;
+      color: #4CAF50;
+    }
+
+    .stat-card.danger .number {
+      color: #f44336;
+    }
+
+    .stat-card.warning .number {
+      color: #ff9800;
+    }
+
+    .filters {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .filter-group label {
+      font-size: 12px;
+      color: #666;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    .filter-group select,
+    .filter-group input {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+
+    .filter-group select:focus,
+    .filter-group input:focus {
+      outline: none;
+      border-color: #4CAF50;
+      box-shadow: 0 0 5px rgba(76,175,80,0.3);
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background: #4CAF50;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #45a049;
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: #2196F3;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #0b7dda;
+    }
+
+    .btn-danger {
+      background: #f44336;
+      color: white;
+    }
+
+    .table-container {
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead {
+      background: #f5f5f5;
+    }
+
+    th {
+      padding: 15px;
+      text-align: left;
+      font-weight: bold;
+      color: #333;
+      font-size: 12px;
+      text-transform: uppercase;
+      border-bottom: 2px solid #ddd;
+    }
+
+    td {
+      padding: 15px;
+      border-bottom: 1px solid #eee;
+    }
+
+    tbody tr:hover {
+      background: #f9f9f9;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .status-contatado {
+      background: #c8e6c9;
+      color: #2e7d32;
+    }
+
+    .status-nao-contatado {
+      background: #ffcdd2;
+      color: #c62828;
+    }
+
+    .status-pendente {
+      background: #ffe0b2;
+      color: #e65100;
+    }
+
+    .checkbox {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+
+    .modal-content {
+      background-color: white;
+      margin: 10% auto;
+      padding: 30px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .modal-header {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #666;
+      font-weight: bold;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+    }
+
+    .empty-state svg {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      background: #e0e0e0;
+      border-radius: 3px;
+      font-size: 11px;
+      color: #666;
+      margin-left: 5px;
+    }
+
+    .badge.novo {
+      background: #c8e6c9;
+      color: #2e7d32;
+    }
+
+    .chart-container {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 10px;
+      background: #eee;
+      border-radius: 5px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #4CAF50;
+      transition: width 0.3s;
+    }
+
+    @media (max-width: 768px) {
+      header h1 {
+        font-size: 24px;
+      }
+
+      .dashboard-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .filters {
+        grid-template-columns: 1fr;
+      }
+
+      table {
+        font-size: 12px;
+      }
+
+      th, td {
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- HEADER -->
+  <header>
+    <h1>📞 Contatos Pós-Venda</h1>
+    <p style="font-size: 14px; color: #aaa;">Acompanhamento de contatos com clientes nos últimos 30 dias</p>
+  </header>
+
+  <!-- DASHBOARD STATS -->
+  <div class="dashboard-stats">
+    <div class="stat-card">
+      <h3>👥 Total de Clientes</h3>
+      <div class="number" id="totalClientes">—</div>
+    </div>
+    <div class="stat-card">
+      <h3>✅ Contatados</h3>
+      <div class="number" id="clientesContatados">—</div>
+    </div>
+    <div class="stat-card danger">
+      <h3>❌ Não Contatados</h3>
+      <div class="number" id="clientesNaoContatados">—</div>
+    </div>
+    <div class="stat-card warning">
+      <h3>📊 Taxa de Contato</h3>
+      <div class="number" id="taxaContato">—</div>
+    </div>
+  </div>
+
+  <!-- FILTROS -->
+  <div class="filters">
+    <div class="filter-group">
+      <label>🏪 Filtrar por Loja</label>
+      <select id="filtroLoja">
+        <option value="">Todas</option>
+        <option value="FORUM OUTLET">Forum Outlet</option>
+        <option value="COLCCI OUTLET OPRJ">Colcci Outlet</option>
+        <option value="TRITON OUTLET">Triton Outlet</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>👤 Filtrar por Vendedor</label>
+      <select id="filtroVendedor">
+        <option value="">Todos</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>📅 Período (dias)</label>
+      <select id="filtroPeriodo">
+        <option value="30">Últimos 30 dias</option>
+        <option value="15">Últimos 15 dias</option>
+        <option value="7">Última semana</option>
+        <option value="1">Hoje</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>Status</label>
+      <select id="filtroStatus">
+        <option value="">Todos</option>
+        <option value="contatado">✅ Contatados</option>
+        <option value="nao-contatado">❌ Não Contatados</option>
+      </select>
+    </div>
+
+    <div class="btn-group" style="align-self: flex-end;">
+      <button class="btn-primary" onclick="App.aplicarFiltros()">🔍 Filtrar</button>
+      <button class="btn-secondary" onclick="App.limparFiltros()">↻ Limpar</button>
+      <button class="btn-secondary" onclick="App.exportarRelatorio()">📥 Exportar</button>
+    </div>
+  </div>
+
+  <!-- TABELA DE CONTATOS -->
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Data Compra</th>
+          <th>👤 Cliente</th>
+          <th>📱 Telefone</th>
+          <th>🏪 Loja</th>
+          <th>👨‍💼 Vendedor</th>
+          <th>💰 Valor Compra</th>
+          <th>Status Contato</th>
+          <th>Resultado</th>
+          <th>⚙️ Ações</th>
+        </tr>
+      </thead>
+      <tbody id="tabelaContatos">
+        <tr>
+          <td colspan="9" class="empty-state">
+            Carregando contatos...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL DE CONTATO -->
+<div id="modalContato" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">📞 Registrar Contato</div>
+    
+    <form id="formContato">
+      <div class="form-group">
+        <label>Cliente</label>
+        <input type="text" id="contatoCliente" readonly>
+      </div>
+
+      <div class="form-group">
+        <label>Status do Contato *</label>
+        <select id="contatoStatus" required>
+          <option value="">Selecione...</option>
+          <option value="contatado">✅ Contatado com Sucesso</option>
+          <option value="tentativa">⚠️ Tentativa (sem resposta)</option>
+          <option value="agendado">📅 Agendado Follow-up</option>
+          <option value="nao-contatado">❌ Impossível Contatar</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Vendedor que Realizou Contato *</label>
+        <select id="contatoVendedor" required>
+          <option value="">Selecione...</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Data/Hora do Contato *</label>
+        <input type="datetime-local" id="contatoData" required>
+      </div>
+
+      <div class="form-group">
+        <label>Observações/Resultado</label>
+        <textarea id="contatoObservacoes" placeholder="Ex: Cliente interessado em novo cashback, prometeu voltar..."></textarea>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="App.fecharModal()">Cancelar</button>
+        <button type="submit" class="btn-primary">💾 Salvar Contato</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- SCRIPTS -->
+<script>
+const App = {
+  clientes: [],
+  contatos: {},
+  vendedores: [],
+  clientesFiltrados: [],
+
+  async init() {
+    console.log('🚀 Iniciando painel de contatos...');
+    this.loadDados();
+    this.carregarVendedores();
+    this.atualizarTabela();
+    this.configurarModal();
+  },
+
+  loadDados() {
+    // Carregar clientes do localStorage
+    const dadosClientes = JSON.parse(localStorage.getItem('cf_clientes_v2') || '{}');
+    this.clientes = dadosClientes.clientes || [];
+
+    // Carregar contatos do localStorage
+    const dadosContatos = JSON.parse(localStorage.getItem('cf_contatos_pos_venda') || '{}');
+    this.contatos = dadosContatos || {};
+
+    console.log(`✅ ${this.clientes.length} clientes carregados`);
+  },
+
+  carregarVendedores() {
+    const vendedoresUnicos = [...new Set(this.clientes.map(c => c.vendedor).filter(Boolean))];
+    this.vendedores = vendedoresUnicos.sort();
+
+    const select = document.getElementById('filtroVendedor');
+    const selectForm = document.getElementById('contatoVendedor');
+    
+    vendedoresUnicos.forEach(v => {
+      const option = document.createElement('option');
+      option.value = v;
+      option.textContent = v;
+      select.appendChild(option);
+
+      const option2 = document.createElement('option');
+      option2.value = v;
+      option2.textContent = v;
+      selectForm.appendChild(option2);
+    });
+  },
+
+  filtrarClientesUltimos30Dias() {
+    const dataHoje = new Date();
+    const data30DiasAtras = new Date(dataHoje);
+    data30DiasAtras.setDate(data30DiasAtras.getDate() - 30);
+
+    return this.clientes.filter(c => {
+      const dataCompra = new Date(c.ultima_compra);
+      return dataCompra >= data30DiasAtras && dataCompra <= dataHoje;
+    });
+  },
+
+  aplicarFiltros() {
+    let clientes = this.filtrarClientesUltimos30Dias();
+
+    const loja = document.getElementById('filtroLoja').value;
+    if (loja) {
+      clientes = clientes.filter(c => c.loja === loja);
+    }
+
+    const vendedor = document.getElementById('filtroVendedor').value;
+    if (vendedor) {
+      clientes = clientes.filter(c => c.vendedor === vendedor);
+    }
+
+    const status = document.getElementById('filtroStatus').value;
+    if (status) {
+      clientes = clientes.filter(c => {
+        const contatoInfo = this.contatos[c.cpf];
+        if (status === 'contatado') return contatoInfo && contatoInfo.contatado;
+        if (status === 'nao-contatado') return !contatoInfo || !contatoInfo.contatado;
+      });
+    }
+
+    this.clientesFiltrados = clientes;
+    this.atualizarTabela();
+    this.atualizarEstatisticas();
+  },
+
+  limparFiltros() {
+    document.getElementById('filtroLoja').value = '';
+    document.getElementById('filtroVendedor').value = '';
+    document.getElementById('filtroStatus').value = '';
+    document.getElementById('filtroPeriodo').value = '30';
+    this.aplicarFiltros();
+  },
+
+  atualizarEstatisticas() {
+    const clientes = this.clientesFiltrados;
+    const contatados = clientes.filter(c => this.contatos[c.cpf]?.contatado).length;
+    const naoContatados = clientes.length - contatados;
+    const taxa = clientes.length > 0 ? ((contatados / clientes.length) * 100).toFixed(1) : 0;
+
+    document.getElementById('totalClientes').textContent = clientes.length;
+    document.getElementById('clientesContatados').textContent = contatados;
+    document.getElementById('clientesNaoContatados').textContent = naoContatados;
+    document.getElementById('taxaContato').textContent = `${taxa}%`;
+  },
+
+  atualizarTabela() {
+    const tbody = document.getElementById('tabelaContatos');
+    
+    if (this.clientesFiltrados.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Nenhum cliente encontrado</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = this.clientesFiltrados.map(cliente => {
+      const contatoInfo = this.contatos[cliente.cpf] || {};
+      const statusBadge = contatoInfo.contatado 
+        ? `<span class="status-badge status-contatado">✅ Contatado</span>`
+        : `<span class="status-badge status-nao-contatado">❌ Não Contatado</span>`;
+
+      return `
+        <tr>
+          <td>${new Date(cliente.ultima_compra).toLocaleDateString('pt-BR')}</td>
+          <td><strong>${cliente.nome}</strong></td>
+          <td>${cliente.telefone || '—'}</td>
+          <td>${cliente.loja || '—'}</td>
+          <td>${cliente.vendedor || '—'}</td>
+          <td>R$ ${(cliente.total_compras || 0).toFixed(2)}</td>
+          <td>${statusBadge}</td>
+          <td>${contatoInfo.resultado || '—'}</td>
+          <td>
+            <button class="btn-secondary" onclick="App.abrirModal('${cliente.cpf}', '${cliente.nome}')">
+              📞 Registrar
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  },
+
+  abrirModal(cpf, nome) {
+    document.getElementById('contatoCliente').value = `${nome} (${cpf})`;
+    document.getElementById('formContato').dataset.cpf = cpf;
+    document.getElementById('contatoData').value = new Date().toISOString().slice(0, 16);
+    document.getElementById('modalContato').style.display = 'block';
+  },
+
+  fecharModal() {
+    document.getElementById('modalContato').style.display = 'none';
+    document.getElementById('formContato').reset();
+  },
+
+  configurarModal() {
+    document.getElementById('formContato').addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const cpf = e.target.dataset.cpf;
+      const status = document.getElementById('contatoStatus').value;
+      const vendedor = document.getElementById('contatoVendedor').value;
+      const data = document.getElementById('contatoData').value;
+      const observacoes = document.getElementById('contatoObservacoes').value;
+
+      this.contatos[cpf] = {
+        contatado: status !== 'nao-contatado',
+        resultado: status,
+        vendedor,
+        data,
+        observacoes,
+        dataSalvo: new Date().toISOString()
+      };
+
+      localStorage.setItem('cf_contatos_pos_venda', JSON.stringify(this.contatos));
+      
+      alert('✅ Contato registrado com sucesso!');
+      this.fecharModal();
+      this.aplicarFiltros();
+    });
+
+    window.addEventListener('click', (e) => {
+      const modal = document.getElementById('modalContato');
+      if (e.target === modal) {
+        this.fecharModal();
+      }
+    });
+  },
+
+  exportarRelatorio() {
+    let csv = 'Data Compra,Cliente,Telefone,Loja,Vendedor,Valor,Status,Resultado,Observações\n';
+
+    this.clientesFiltrados.forEach(c => {
+      const contato = this.contatos[c.cpf] || {};
+      csv += `"${new Date(c.ultima_compra).toLocaleDateString('pt-BR')}"`;
+      csv += `,"${c.nome}"`;
+      csv += `,"${c.telefone || ''}"`;
+      csv += `,"${c.loja || ''}"`;
+      csv += `,"${c.vendedor || ''}"`;
+      csv += `,"${c.total_compras || 0}"`;
+      csv += `,"${contato.contatado ? 'Contatado' : 'Não Contatado'}"`;
+      csv += `,"${contato.resultado || ''}"`;
+      csv += `,"${(contato.observacoes || '').replace(/"/g, '""')}"`;
+      csv += '\n';
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `contatos-pos-venda-${new Date().toISOString().split('T')[0]}.csv`);
+    link.click();
+  }
+};
+
+// Inicializar quando a página carregar
+document.addEventListener('DOMContentLoaded', () => App.init());
+</script>
+
+</body>
+</html>
