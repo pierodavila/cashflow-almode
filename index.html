@@ -121,6 +121,10 @@ const usuarioAtual = auth.check(true)
         <label>% Cashback</label>
         <input type="number" id="cfPct" value="5" min="1" max="30">
       </div>
+      <div class="cf-group">
+        <label>📅 Validade do Cashback (dias)</label>
+        <input type="number" id="cfValidade" value="180" min="1" max="1825" style="width:100%">
+      </div>
       <button class="btn-save" onclick="App.onSaveConfig()">💾 Salvar Configuração</button>
     </div>
   
