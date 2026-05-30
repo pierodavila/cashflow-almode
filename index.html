@@ -442,11 +442,19 @@ const usuarioAtual = auth.check(true)
 
 const AutoSync = {
   INTERVALO_HORAS: 1,
-  PAGINAS_INCREMENTAL: 2,  // ~100 vendas mais recentes
+  PAGINAS_INCREMENTAL: 5,  // 250 vendas mais recentes  // ~100 vendas mais recentes
   rodando: false,
 
   // Inicializa ao carregar o app
   async init() {
+    // Garantir que cf_supabase_cfg está sempre configurado
+    const _sbCheck = JSON.parse(localStorage.getItem('cf_supabase_cfg') || '{}')
+    if (!_sbCheck.url) {
+      localStorage.setItem('cf_supabase_cfg', JSON.stringify({
+        url: 'https://gudhgyfaizueshafhqvc.supabase.co',
+        anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZGhneWZhaXp1ZXNoYWZocXZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2ODgzNDksImV4cCI6MjA5NTI2NDM0OX0.LrUMZ6XnQFqvmDMn1n5vkdS5FIgTY8j-tnsMH_dtA08'
+      }))
+    }
     const cfg = AutoSync.getCfg()
     AutoSync.atualizarBadge()
 
@@ -486,7 +494,7 @@ const AutoSync = {
       const promises = []
       for (let p = 0; p < AutoSync.PAGINAS_INCREMENTAL; p++) {
         promises.push(
-          fetch(`https://${cfg.domain}/api/vendas?page=${p}&size=${PAGE_SIZE}`, {
+          fetch(`https://${cfg.domain}/api/vendas?page=${p}&size=${PAGE_SIZE}&sort=dataHora,desc`, {
             headers: { 'Authorization': `Bearer ${cfg.token}` }
           }).then(r => r.json()).catch(() => ({ content: [] }))
         )
