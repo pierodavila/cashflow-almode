@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔄 Sync Millennium - CashFlow</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#1a1a2e,#16213e);min-height:100vh;padding:24px;color:#333}
+    .container{max-width:800px;margin:0 auto}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;flex-wrap:wrap;gap:12px}
+    .ht{color:white}.ht h1{font-size:26px;display:flex;align-items:center;gap:10px}.ht p{color:#aaa;font-size:13px;margin-top:4px}
+    .btn{padding:10px 18px;border:none;border-radius:8px;font-size:14px;font-weight:bold;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+    .btn-blue{background:#2196F3;color:white}.btn-gray{background:#555;color:white}
+    .card{background:white;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 4px 15px rgba(0,0,0,.1)}
+    .card h2{font-size:16px;color:#333;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+    .step{display:flex;gap:16px;margin-bottom:20px;align-items:flex-start}
+    .step:last-child{margin-bottom:0}
+    .step-num{width:32px;height:32px;border-radius:50%;background:#4CAF50;color:white;font-weight:bold;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .step-num.blue{background:#2196F3}
+    .step-content h3{font-size:14px;color:#333;margin-bottom:4px}
+    .step-content p{font-size:13px;color:#666;line-height:1.5}
+    .bookmarklet-box{background:#f0f7ff;border:2px dashed #2196F3;border-radius:10px;padding:20px;text-align:center;margin:16px 0}
+    .bookmarklet-link{display:inline-block;background:#2196F3;color:white;padding:14px 28px;border-radius:8px;font-size:16px;font-weight:bold;text-decoration:none;margin:10px;cursor:grab}
+    .bookmarklet-link:hover{background:#0b7dda}
+    .hint{font-size:12px;color:#888;margin-top:8px;line-height:1.5}
+    .status-card{background:#f8f9fa;border-radius:10px;padding:16px;border-left:4px solid #4CAF50}
+    .status-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #eee;font-size:13px}
+    .status-row:last-child{border-bottom:none}
+    .badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:bold}
+    .badge-green{background:#c8e6c9;color:#2e7d32}
+    .badge-gray{background:#e0e0e0;color:#555}
+    .log-box{background:#1a1a1a;border-radius:8px;padding:14px;font-family:monospace;font-size:12px;color:#00e5a0;min-height:80px;max-height:200px;overflow-y:auto;white-space:pre-wrap;margin-top:12px}
+    .btn-sync{width:100%;padding:14px;background:linear-gradient(135deg,#4CAF50,#2e7d32);color:white;border:none;border-radius:8px;font-size:15px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+    .btn-sync:hover{opacity:.9}
+    .btn-sync:disabled{background:#999;cursor:not-allowed}
+    .img-hint{background:#f5f5f5;border-radius:8px;padding:12px;text-align:center;font-size:12px;color:#666;margin-top:8px}
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="ht">
+      <h1>🔄 Sync Aeropostale</h1>
+      <p>Sincronizar clientes do Millennium com o CashFlow</p>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-blue" onclick="location.href='index.html'">← Dashboard</button>
+      <button class="btn btn-gray" onclick="cfSair()">🚪 Sair</button>
+    </div>
+  </header>
+
+  <!-- STATUS -->
+  <div class="card">
+    <h2>📊 Status da Última Sincronização</h2>
+    <div class="status-card">
+      <div class="status-row"><span>Última sincronização</span><span id="ultimaSync" class="badge badge-gray">Nunca</span></div>
+      <div class="status-row"><span>Clientes Aeropostale no sistema</span><span id="totalAero" class="badge badge-green">—</span></div>
+      <div class="status-row"><span>Período sincronizado</span><span id="periodoSync" class="badge badge-gray">—</span></div>
+    </div>
+  </div>
+
+  <!-- INSTALAÇÃO DO BOOKMARKLET -->
+  <div class="card">
+    <h2>📌 Passo 1 — Instalar o Botão de Sincronização <span style="font-size:11px;color:#999;font-weight:normal">(só uma vez)</span></h2>
+
+    <div class="step">
+      <div class="step-num blue">1</div>
+      <div class="step-content">
+        <h3>Arraste o botão abaixo para a barra de favoritos</h3>
+        <p>Se a barra não aparecer, pressione <strong>Ctrl+Shift+B</strong> (Windows) ou <strong>Cmd+Shift+B</strong> (Mac)</p>
+      </div>
+    </div>
+
+    <div class="bookmarklet-box">
+      <a class="bookmarklet-link" id="bookmarkletLink" href="#">
+        📥 Sync Aeropostale → CashFlow
+      </a>
+      <div class="hint">
+        ⬆️ Arraste este botão para a sua barra de favoritos do Chrome<br>
+        Depois é só clicar nele quando estiver no Millennium com o relatório aberto
+      </div>
+    </div>
+
+    <div class="img-hint">
+      💡 <strong>Como instalar:</strong> Arraste o botão verde acima para a barra de favoritos do Chrome (a barra de links no topo do browser)
+    </div>
+  </div>
+
+  <!-- COMO USAR -->
+  <div class="card">
+    <h2>🚀 Passo 2 — Usar no Dia a Dia</h2>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h3>Abra o Millennium</h3>
+        <p>Acesse <strong>app.aeropostale.com.br:6017</strong> normalmente</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h3>Gere o relatório <strong>CLIENTES_VENDAS_CELULAR_EMAIL</strong></h3>
+        <p>Selecione o período desejado (recomendado: últimos 30 dias para atualizações rápidas) e clique em <strong>Visualizar</strong></p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h3>Clique no favorito <strong>"📥 Sync Aeropostale → CashFlow"</strong></h3>
+        <p>O script vai extrair os dados do PDF automaticamente e enviar pro Supabase. Uma janela vai confirmar quando terminar.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOG -->
+  <div class="card">
+    <h2>📋 Log de Atividade</h2>
+    <div class="log-box" id="logBox">Aguardando sincronização...</div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// BOOKMARKLET — código que será executado no Millennium
+// ============================================================
+const BOOKMARKLET_CODE = `(async()=>{
+  var SB='https://gudhgyfaizueshafhqvc.supabase.co';
+  var KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZGhneWZhaXp1ZXNoYWZocXZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2ODgzNDksImV4cCI6MjA5NTI2NDM0OX0.LrUMZ6XnQFqvmDMn1n5vkdS5FIgTY8j-tnsMH_dtA08';
+  var H={'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'};
+
+  // Verificar se está no Millennium
+  if(!window.millennium){alert('❌ Execute este botão dentro do Millennium!');return;}
+
+  // Encontrar blob PDF no iframe
+  var frames=document.querySelectorAll('iframe');
+  var blobUrl=null;
+  var newest=null;
+  for(var f of frames){
+    try{
+      var u=f.contentWindow.location.href;
+      if(u.startsWith('blob:')){blobUrl=u;}
+    }catch(e){}
+  }
+  if(!blobUrl){alert('❌ Nenhum relatório aberto!\\n\\nGere o relatório CLIENTES_VENDAS_CELULAR_EMAIL no Millennium primeiro.');return;}
+
+  // Mostrar progresso
+  var div=document.createElement('div');
+  div.id='_cfSync';
+  div.style.cssText='position:fixed;top:20px;right:20px;background:#333;color:white;padding:20px 24px;border-radius:12px;z-index:99999;font-family:sans-serif;font-size:14px;min-width:300px;box-shadow:0 4px 20px rgba(0,0,0,.5)';
+  div.innerHTML='<strong>💰 CashFlow Sync</strong><br><br><span id="_cfMsg">📥 Carregando PDF...</span>';
+  document.body.appendChild(div);
+  var msg=el=>document.getElementById('_cfMsg').innerHTML=el;
+
+  try{
+    // Carregar PDF.js se necessário
+    if(typeof pdfjsLib==='undefined'){
+      msg('📦 Carregando PDF.js...');
+      await new Promise((res,rej)=>{
+        var s=document.createElement('script');
+        s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+        s.onload=res;s.onerror=rej;
+        document.head.appendChild(s);
+      });
+      pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    // Ler PDF
+    msg('📖 Lendo PDF...');
+    var r=await fetch(blobUrl);
+    var buf=await r.arrayBuffer();
+    var pdf=await pdfjsLib.getDocument({data:buf}).promise;
+    msg('📖 Extraindo '+pdf.numPages+' páginas...');
+
+    // Parser por colunas X
+    var COLS={codigo:30,dataCad:66,dataAniv:139,nome:195,ddd:281,tel:293,email:328,vendedor:638,vendedor2:671,qtde:731,valor:750,tickets:790};
+    function getCol(x){for(var c in COLS){if(Math.abs(x-COLS[c])<=10)return c;}return null;}
+
+    var linhas={};
+    for(var p=1;p<=pdf.numPages;p++){
+      var page=await pdf.getPage(p);
+      var content=await page.getTextContent();
+      content.items.forEach(item=>{
+        if(!item.str.trim())return;
+        var x=Math.round(item.transform[4]);
+        var y=Math.round(item.transform[5]);
+        var col=getCol(x);
+        if(!col)return;
+        var key=p+'_'+y;
+        if(!linhas[key])linhas[key]={};
+        linhas[key][col]=linhas[key][col]?linhas[key][col]+' '+item.str.trim():item.str.trim();
+      });
+      if(p%10===0)msg('📖 Página '+p+'/'+pdf.numPages+'...');
+    }
+
+    // Parsear clientes
+    var mapa={};
+    Object.values(linhas).forEach(l=>{
+      if(!l.codigo||!/^\\d{4,}/.test(l.codigo)||l.codigo==='Código')return;
+      var valorStr=(l.valor||'').replace('R$','').replace(/\\./g,'').replace(',','.').trim();
+      var valor=parseFloat(valorStr)||0;
+      var tel=((l.ddd||'')+(l.tel||'')).replace(/\\D/g,'');
+      var cod=l.codigo;
+      if(!mapa[cod]||valor>mapa[cod].valor_total){
+        mapa[cod]={
+          codigo:cod,nome:(l.nome||'').trim(),telefone:tel,
+          email:(l.email||'').toLowerCase().trim(),
+          vendedor:((l.vendedor||'')+' '+(l.vendedor2||'')).trim(),
+          qtde:parseInt(l.qtde)||0,valor_total:valor
+        };
+      }
+    });
+    var clientes=Object.values(mapa);
+    msg('📤 Enviando '+clientes.length+' clientes para o CashFlow...');
+
+    // Enviar pro Supabase
+    var payload=clientes.map(c=>({
+      cpf:c.codigo,nome:c.nome,telefone:c.telefone,
+      total_compras:c.valor_total,qtd_vendas:c.qtde,
+      cashback:Math.round(c.valor_total*0.05*100)/100,
+      loja:'AEROPOSTALE',ultima_compra:new Date().toISOString()
+    }));
+    var sucesso=0,erros=0;
+    for(var i=0;i<payload.length;i+=50){
+      var lote=payload.slice(i,i+50);
+      var resp=await fetch(SB+'/rest/v1/cf_clientes',{method:'POST',headers:H,body:JSON.stringify(lote)});
+      if(resp.ok)sucesso+=lote.length;else erros+=lote.length;
+      msg('📤 Enviando... '+(i+lote.length)+'/'+payload.length);
+    }
+
+    // Salvar log no Supabase
+    await fetch(SB+'/rest/v1/cf_sync_log',{method:'POST',headers:H,body:JSON.stringify([{
+      fonte:'millennium',total:sucesso,erros:erros,
+      periodo:document.querySelectorAll('iframe')[0]?'ver PDF':'?',
+      sync_at:new Date().toISOString()
+    }])}).catch(()=>{});
+
+    div.style.background='#1b5e20';
+    msg('✅ '+sucesso+' clientes sincronizados!\\n❌ Erros: '+erros+'\\n\\nFeche esta janela e atualize o CashFlow.');
+    setTimeout(()=>div.remove(),8000);
+
+  }catch(e){
+    div.style.background='#b71c1c';
+    msg('❌ Erro: '+e.message);
+    setTimeout(()=>div.remove(),6000);
+  }
+})()`;
+
+// Criar o href do bookmarklet
+document.getElementById('bookmarkletLink').href = 'javascript:' + encodeURIComponent(BOOKMARKLET_CODE);
+
+// ============================================================
+// STATUS — carregar do Supabase
+// ============================================================
+async function carregarStatus() {
+  const SB = 'https://gudhgyfaizueshafhqvc.supabase.co';
+  const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1ZGhneWZhaXp1ZXNoYWZocXZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2ODgzNDksImV4cCI6MjA5NTI2NDM0OX0.LrUMZ6XnQFqvmDMn1n5vkdS5FIgTY8j-tnsMH_dtA08';
+  const H = { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY };
+
+  try {
+    // Total de clientes Aeropostale
+    const r = await fetch(SB + '/rest/v1/cf_clientes?loja=eq.AEROPOSTALE&select=count', {
+      headers: { ...H, 'Prefer': 'count=exact', 'Range': '0-0' }
+    });
+    const count = r.headers.get('content-range');
+    if (count) {
+      const total = count.split('/')[1];
+      document.getElementById('totalAero').textContent = total + ' clientes';
+      document.getElementById('totalAero').className = 'badge badge-green';
+    }
+
+    // Última sync
+    const r2 = await fetch(SB + '/rest/v1/cf_sync_log?fonte=eq.millennium&order=sync_at.desc&limit=1', { headers: H });
+    if (r2.ok) {
+      const logs = await r2.json();
+      if (logs && logs[0]) {
+        const l = logs[0];
+        const data = new Date(l.sync_at).toLocaleString('pt-BR');
+        document.getElementById('ultimaSync').textContent = data;
+        document.getElementById('ultimaSync').className = 'badge badge-green';
+        if (l.total) document.getElementById('totalAero').textContent = l.total + ' clientes';
+      }
+    }
+  } catch (e) {
+    console.error('Erro ao carregar status:', e);
+  }
+}
+
+function cfSair() {
+  localStorage.removeItem('cf_sessao_usuario');
+  location.href = 'login.html';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  carregarStatus();
+});
+</script>
+</body>
+</html>
