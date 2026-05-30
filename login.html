@@ -203,7 +203,7 @@
     <!-- INFO BOX -->
     <div class="info-box">
       <strong>ℹ️ Instruções:</strong>
-      Digite seu login. A senha será verificada automaticamente.
+      Digite seu login para entrar no sistema.
     </div>
 
     <!-- ERROR MESSAGE -->
@@ -238,7 +238,7 @@
   <!-- FOOTER -->
   <div class="login-footer">
     <p>🔒 Sistema seguro com controle de acesso por papel</p>
-    <p style="margin-top: 10px; font-size: 12px;">💡 Logins disponíveis: piero, forum, colcci, triton, carlos, ana, joao</p>
+    <p style="margin-top: 10px; font-size: 12px;">💡 Gerentes: forum, colcci, triton | Vendedores: wagner, suellen, lais, bianca | Admin: piero</p>
   </div>
 </div>
 
@@ -290,6 +290,31 @@ const usuarios = {
     loja: 'COLCCI OUTLET OPRJ',
     redireciona: 'contatos-pos-venda.html'
   },
+  // Vendedores reais (Forum Outlet)
+  'wagner': {
+    tipo: 'vendedor',
+    nome: 'Wagner Cabral',
+    loja: 'FORUM OUTLET',
+    redireciona: 'contatos-pos-venda.html'
+  },
+  'suellen': {
+    tipo: 'vendedor',
+    nome: 'Suellen Lima',
+    loja: 'FORUM OUTLET',
+    redireciona: 'contatos-pos-venda.html'
+  },
+  'lais': {
+    tipo: 'vendedor',
+    nome: 'Laís Nunes',
+    loja: 'FORUM OUTLET',
+    redireciona: 'contatos-pos-venda.html'
+  },
+  'bianca': {
+    tipo: 'vendedor',
+    nome: 'Bianca Hamylly',
+    loja: 'FORUM OUTLET',
+    redireciona: 'contatos-pos-venda.html'
+  },
   'joao': {
     tipo: 'vendedor',
     nome: 'João Oliveira',
@@ -313,9 +338,9 @@ async function handleLogin(event) {
   const usuario = usuarios[username];
   
   if (!usuario) {
-    errorMsg.textContent = '❌ Login não encontrado! Verifique se digitou corretamente.';
+    errorMsg.textContent = '❌ Login "' + username + '" não encontrado. Verifique o login e tente novamente.';
     errorMsg.style.display = 'block';
-    document.getElementById('username').focus();
+    document.getElementById('username').select();
     return;
   }
 
